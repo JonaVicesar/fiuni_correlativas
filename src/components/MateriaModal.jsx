@@ -16,12 +16,16 @@ const NOTAS = [
  * Formula
  * Si PF >= PP -> PC = PF
  * Si PP > PF -> PC = PPx0.4 + PFx0.6
+ * Es requerido minino un 60 en el final
  */
 function pfNecesario(pp, pcObjetivo) {
   const pfObjetivo = (pcObjetivo - pp * 0.4) / 0.6;
 
+  //si el pfObjetivo es menor a 60 (nota 2), retorna 60
+  if (pfObjetivo <= 60) return pcObjetivo;
+
   if (pfObjetivo >= pp) return pcObjetivo; // si pfObjetivo ya es mayor o igual al pp el minimo es pcObjetivo (no tiene sentido que si pfObjetivo es <= 99  el minimo requerido sea ese)
-  return Math.ceil(pfObjetivo);
+  return Math.round(pfObjetivo);
 }
 
 function colorPP(pp) {
@@ -568,7 +572,7 @@ export default function MateriaModal({
           </Seccion>
         )}
 
-        {/*seccion para las faltas*/}
+        {/* seccion para las faltas*/}
         {tienePP && materiaPeriodoId && (
           <Seccion titulo="Mis faltas" defaultAbierta={false}>
             {!faltasCargadas ? (
