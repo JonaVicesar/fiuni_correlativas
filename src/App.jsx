@@ -36,6 +36,16 @@ export default function App() {
               style={{
                 background: vista === v ? "var(--accent)" : "transparent",
                 color: vista === v ? "#000" : "var(--text-dim)",
+                padding: ".4rem .9rem",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Syne, sans-serif",
+                fontSize: ".85rem",
+                fontWeight: "600",
+                background: vista === v ? "var(--accent)" : "transparent",
+                color: vista === v ? "#000" : "var(--text-dim)",
+                transition: "all .2s",
               }}
             >
               {label}
