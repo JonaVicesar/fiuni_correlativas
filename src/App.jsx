@@ -21,39 +21,30 @@ export default function App() {
   return (
     <>
       <header className="header">
-        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-          <div className="header-logo">
-            FIUNI<span>Correlativas</span>
-          </div>
-          <nav style={{ display: "flex", gap: ".25rem" }}>
-            {[
-              ["dashboard", "Mis materias"],
-              ["mapa", "Mapa de correlativas"],
-            ].map(([v, label]) => (
-              <button
-                key={v}
-                onClick={() => setVista(v)}
-                style={{
-                  padding: ".4rem .9rem",
-                  borderRadius: "6px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "Syne, sans-serif",
-                  fontSize: ".85rem",
-                  fontWeight: "600",
-                  background: vista === v ? "var(--accent)" : "transparent",
-                  color: vista === v ? "#000" : "var(--text-dim)",
-                  transition: "all .2s",
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
+        <div className="header-logo">
+          {/*ahora agregamos el logo en vez del nombre de la pagina*/}
+          <img src="/Fiuni-Logo.svg" alt="FIUNI" height={36} />
         </div>
+        <nav className="header-nav">
+          {[
+            ["dashboard", "Mis Materias"],
+            ["mapa", "Mapa"],
+          ].map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setVista(v)}
+              style={{
+                background: vista === v ? "var(--accent)" : "transparent",
+                color: vista === v ? "#000" : "var(--text-dim)",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
 
         <div className="header-user">
-          <span className="header-nombre">{session.nombre}</span>
+          <span className="header-nombre"> {session.nombre}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Salir
           </button>
