@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import Spinner from "./Spinner";
 import MateriaModal from "./MateriaModal";
+import Libreta from "./Libreta";
 
 function colorAsistencia(porcentaje) {
   if (porcentaje >= 75) return "var(--aprobada)";
@@ -22,6 +23,7 @@ export default function Dashboard({ session }) {
   const [modalMateria, setModalMateria] = useState(null);
   const [historialMaterias, setHistorialMaterias] = useState(null);
   const [mapaMaterias, setMapaMaterias] = useState(null);
+  const [mostrarLibreta, setMostrarLibreta] = useState(false); // Estado para toggle
 
   // carga las materias actuales
   useEffect(() => {
@@ -63,162 +65,208 @@ export default function Dashboard({ session }) {
       <div style={{ marginBottom: "2rem" }}>
         <div
           style={{
-            fontSize: ".75rem",
-            textTransform: "uppercase",
-            letterSpacing: "3px",
-            color: "var(--text-dim)",
-            fontFamily: "Space Mono, monospace",
-            marginBottom: ".5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            flexWrap: "wrap",
+            gap: "1rem",
           }}
         >
-          {session.carrera || "Informática"} · {new Date().getFullYear()}
-        </div>
-        <h1 style={{ fontSize: "1.8rem", fontWeight: "800" }}>Mis materias</h1>
-        <span
-          style={{
-            fontSize: ".7rem",
-            color: "var(--text-dim)",
-            fontFamily: "Space Mono, monospace",
-          }}
-        >
-          Click en cualquier materia para ver su detalle
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "1rem",
-        }}
-      >
-        {materias.map((m) => {
-          const registro = m;
-          const pp = registro?.porcentajePP ?? 0;
-          const pAsistencia = registro?.porcentajeAsistencia ?? 0;
-
-          return (
+          <div>
             <div
-              key={m.id}
-              className="card-materia"
-              onClick={() => {
-                setModalMateria({
-                  id: m.codigoMateria,
-                  nombre: m.materia,
-                  semestre: m.semestre,
-                  estado: "cursando",
-                });
+              style={{
+                fontSize: ".75rem",
+                textTransform: "uppercase",
+                letterSpacing: "3px",
+                color: "var(--text-dim)",
+                fontFamily: "Space Mono, monospace",
+                marginBottom: ".5rem",
               }}
-              style={{ cursor: "pointer" }}
             >
-              <div>
-                <div style={{ fontWeight: "700", fontSize: ".95rem" }}>
-                  {m.materia}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Space Mono, monospace",
-                    fontSize: ".7rem",
-                    color: "var(--text-dim)",
-                  }}
-                >
-                  Cód. {m.codigoMateria} · {m.semestre}° Semestre
-                </div>
-              </div>
-
-              {/*Asistencia */}
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: ".75rem",
-                    marginBottom: ".3rem",
-                  }}
-                >
-                  <span style={{ color: "var(--text-dim)" }}>Asistencia</span>
-                  <span
-                    style={{
-                      color: colorAsistencia(pAsistencia),
-                      fontWeight: "700",
-                      fontFamily: "Space Mono, monospace",
-                    }}
-                  >
-                    {pAsistencia}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: "3px",
-                    background: "var(--border)",
-                    borderRadius: "2px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${pAsistencia}%`,
-                      background: colorAsistencia(pAsistencia),
-                      borderRadius: "2px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/*Promedio PP */}
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: ".75rem",
-                    marginBottom: ".3rem",
-                  }}
-                >
-                  <span style={{ color: "var(--text-dim)" }}>Promedio PP</span>
-                  <span
-                    style={{
-                      color: colorPP(pp),
-                      fontWeight: "700",
-                      fontFamily: "Space Mono, monospace",
-                    }}
-                  >
-                    {pp}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: "3px",
-                    background: "var(--border)",
-                    borderRadius: "2px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${pp}%`,
-                      background: colorPP(pp),
-                      borderRadius: "2px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  fontSize: ".65rem",
-                  color: "var(--text-dim)",
-                  fontFamily: "Space Mono, monospace",
-                  borderTop: "1px solid var(--border)",
-                  paddingTop: ".5rem",
-                }}
-              >
-                {m.periodo}
-              </div>
+              {session.carrera || "Informática"} · {new Date().getFullYear()}
             </div>
-          );
-        })}
+            <h1 style={{ fontSize: "1.8rem", fontWeight: "800", margin: 0 }}>
+              {mostrarLibreta ? "Libreta de notas" : "Mis materias"}
+            </h1>
+          </div>
+
+          {/* boton para cambiar entre secciones*/}
+          <button
+            onClick={() => setMostrarLibreta(!mostrarLibreta)}
+            style={{
+              background: mostrarLibreta ? "var(--accent)" : "var(--bg2)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontFamily: "Space Mono, monospace",
+              fontSize: ".75rem",
+              fontWeight: "600",
+              color: mostrarLibreta ? "white" : "var(--text-dim)",
+              transition: "all 0.2s",
+            }}
+          >
+            {mostrarLibreta ? "Mis materias" : "Libreta"}
+          </button>
+        </div>
+
+        {!mostrarLibreta && (
+          <span
+            style={{
+              fontSize: ".7rem",
+              color: "var(--text-dim)",
+              fontFamily: "Space Mono, monospace",
+              display: "block",
+              marginTop: ".5rem",
+            }}
+          >
+            Click en cualquier materia para ver su detalle
+          </span>
+        )}
       </div>
+
+      {!mostrarLibreta ? (
+        // vista de materias
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          {materias.map((m) => {
+            const registro = m;
+            const pp = registro?.porcentajePP ?? 0;
+            const pAsistencia = registro?.porcentajeAsistencia ?? 0;
+
+            return (
+              <div
+                key={m.id}
+                className="card-materia"
+                onClick={() => {
+                  setModalMateria({
+                    id: m.codigoMateria,
+                    nombre: m.materia,
+                    semestre: m.semestre,
+                    estado: "cursando",
+                  });
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: ".95rem" }}>
+                    {m.materia}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "Space Mono, monospace",
+                      fontSize: ".7rem",
+                      color: "var(--text-dim)",
+                    }}
+                  >
+                    Cód. {m.codigoMateria} · {m.semestre}° Semestre
+                  </div>
+                </div>
+
+                {/*Asistencia */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: ".75rem",
+                      marginBottom: ".3rem",
+                    }}
+                  >
+                    <span style={{ color: "var(--text-dim)" }}>Asistencia</span>
+                    <span
+                      style={{
+                        color: colorAsistencia(pAsistencia),
+                        fontWeight: "700",
+                        fontFamily: "Space Mono, monospace",
+                      }}
+                    >
+                      {pAsistencia}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: "3px",
+                      background: "var(--border)",
+                      borderRadius: "2px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${pAsistencia}%`,
+                        background: colorAsistencia(pAsistencia),
+                        borderRadius: "2px",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/*Promedio PP */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: ".75rem",
+                      marginBottom: ".3rem",
+                    }}
+                  >
+                    <span style={{ color: "var(--text-dim)" }}>
+                      Promedio PP
+                    </span>
+                    <span
+                      style={{
+                        color: colorPP(pp),
+                        fontWeight: "700",
+                        fontFamily: "Space Mono, monospace",
+                      }}
+                    >
+                      {pp}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: "3px",
+                      background: "var(--border)",
+                      borderRadius: "2px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${pp}%`,
+                        background: colorPP(pp),
+                        borderRadius: "2px",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: ".65rem",
+                    color: "var(--text-dim)",
+                    fontFamily: "Space Mono, monospace",
+                    borderTop: "1px solid var(--border)",
+                    paddingTop: ".5rem",
+                  }}
+                >
+                  {m.periodo}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        // Vista de libreta
+        <Libreta session={session} />
+      )}
 
       {/*Modal de detalle*/}
       {modalMateria && (
