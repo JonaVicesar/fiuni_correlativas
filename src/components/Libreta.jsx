@@ -24,22 +24,6 @@ function formatFecha(fechaStr) {
     .padStart(2, "0")}/${d.getFullYear()}`;
 }
 
-// calcula promedio del semestre
-function calcularPromedio(materias) {
-  console.log("COMO LLEGAN MATERIAS A calcular promedio", materias);
-
-  //console.log("CALIFICACIONES POR SEMESTRE", calificaciones);
-  let suma = 0;
-  let intentos = 0;
-
-  materias.forEach((materia, index) => {
-    suma += materia.nota;
-    intentos += materia.intentos;
-  });
-
-  return (suma / intentos).toFixed(2);
-}
-
 export default function Libreta({ session }) {
   const [libreta, setLibreta] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,11 +35,9 @@ export default function Libreta({ session }) {
     const query = session.carreraId ? `?carrera_id=${session.carreraId}` : "";
     apiFetch(`/libreta${query}`, { token: session.token })
       .then((data) => {
-        console.log("Libreta data:", data);
         setLibreta(data);
       })
       .catch((err) => {
-        console.error("Error libreta:", err);
         setError(err.message);
       })
       .finally(() => setLoading(false));
@@ -101,63 +83,66 @@ export default function Libreta({ session }) {
   // obtener cada semestre
   const semestresProcesados = libreta.calificacionesSemestres.map(
     (semestre) => {
-      // console.log("CALIFICACIONES SEMESTRES", libreta.calificacionesSemestres);
-      const materias = semestre.calificacionesMaterias.map((materia) => {
-        let intentos = 0;
-        let calificaciones = "";
+      let todasLasNotas = []; // Para calcular el promedio
 
-        if (materia.calificaciones.length > 1) {
-          console.log("Entro en el if con", materia.materia);
-          materia.calificaciones.forEach((calificacion, index) => {
-            console.log("tiene que entrar en el if", materia.materia);
-            if (
-              calificacion.calificacion != null &&
-              calificacion.calificacion > 0
-            ) {
-              console.log("Entro en el segundo if con", materia.materia);
-              console.log("SE VA A SUMAR");
-              intentos += 1;
-
-              // console.log("VECES RENDIDAS", intentos);
-            }
-          });
+      const materias = semestre.calificacionesMaterias.flatMap((materia) => {
+        if (!materia.calificaciones || materia.calificaciones.length === 0) {
+          // Materia sin calificaciones (no rindió ninguna mesa)
+          return [
+            {
+              codigo: materia.materiaCodigo,
+              nombre: materia.materia,
+              nota: null,
+              notaLetras: "",
+              acta: "",
+              fecha: "",
+              periodo: "",
+            },
+          ];
         }
 
-        intentos += 1;
+        // Filtrar solo las mesas donde realmente rindió
+        // (calificacion no es null/undefined, aunque sea 0 o 1)
+        const mesasRendidas = materia.calificaciones.filter(
+          (cal) => cal.calificacion !== null && cal.calificacion !== undefined
+        );
 
-        let mejorCalificacion = null;
-        let mejorActa = "";
-        let mejorFecha = "";
-        let mejorPeriodo = "";
-
-        if (materia.calificaciones && materia.calificaciones.length > 0) {
-          const ordenadas = [...materia.calificaciones];
-
-          const mejor = ordenadas[0];
-
-          mejorCalificacion = mejor.calificacion;
-          mejorActa = mejor.nroActa || "";
-          mejorFecha = mejor.fechaExamen || "";
-          mejorPeriodo = mejor.periodo || "";
+        if (mesasRendidas.length === 0) {
+          // Se inscribió pero no rindió ninguna mesa → no aparece
+          return [];
         }
 
-        return {
+        // Guardar notas para el promedio (solo las que son > 0)
+        mesasRendidas.forEach((cal) => {
+          if (cal.calificacion > 0) {
+            todasLasNotas.push(cal.calificacion);
+          }
+        });
+
+        // Crear una fila por cada mesa rendida
+        return mesasRendidas.map((cal) => ({
           codigo: materia.materiaCodigo,
           nombre: materia.materia,
-          nota: mejorCalificacion,
-          notaLetras: numeroALetras(mejorCalificacion),
-          acta: mejorActa,
-          fecha: mejorFecha,
-          periodo: mejorPeriodo,
-          intentos: intentos,
-        };
+          nota: cal.calificacion,
+          notaLetras: numeroALetras(cal.calificacion),
+          acta: cal.nroActa || "",
+          fecha: cal.fechaExamen || "",
+          periodo: cal.periodo || "",
+        }));
       });
+
+      // Calcular promedio del semestre
+      let promedio = "-";
+      if (todasLasNotas.length > 0) {
+        const suma = todasLasNotas.reduce((acc, n) => acc + n, 0);
+        promedio = (suma / todasLasNotas.length).toFixed(2);
+      }
 
       return {
         id: semestre.semestreId,
         nombre: semestre.semestre,
         materias: materias,
-        promedio: calcularPromedio(materias),
+        promedio: promedio,
       };
     },
   );
@@ -383,16 +368,18 @@ export default function Libreta({ session }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {semestre.materias.map((materia) => {
+                    {semestre.materias.map((materia, idx) => {
                       const notaColor =
-                        materia.nota >= 4
-                          ? "var(--aprobada)"
-                          : materia.nota >= 2
-                            ? "var(--disponible)"
-                            : "var(--bloqueada-t)";
+                        materia.nota === null || materia.nota === undefined
+                          ? "var(--text-dim)"
+                          : materia.nota >= 4
+                            ? "var(--aprobada)"
+                            : materia.nota >= 2
+                              ? "var(--disponible)"
+                              : "var(--bloqueada-t)";
                       return (
                         <tr
-                          key={materia.codigo}
+                          key={`${materia.codigo}-${idx}`}
                           style={{ borderBottom: "1px solid var(--border)" }}
                         >
                           <td
@@ -415,11 +402,9 @@ export default function Libreta({ session }) {
                               color: notaColor,
                             }}
                           >
-                            {materia.nota > 0
+                            {materia.nota !== null && materia.nota !== undefined
                               ? materia.nota
-                              : materia.nota === 0
-                                ? "0"
-                                : "-"}
+                              : "-"}
                           </td>
                           <td
                             style={{
@@ -428,11 +413,7 @@ export default function Libreta({ session }) {
                               fontSize: "0.65rem",
                             }}
                           >
-                            {materia.nota > 0
-                              ? materia.notaLetras
-                              : materia.nota === 0
-                                ? "Cero"
-                                : "-"}
+                            {materia.notaLetras || "-"}
                           </td>
                           <td
                             style={{
@@ -491,10 +472,6 @@ export default function Libreta({ session }) {
                         }}
                       >
                         {semestre.promedio || "-"}
-                        {console.log(
-                          "promedio del semestre",
-                          semestre.promedio,
-                        )}
                       </td>
                     </tr>
                   </tfoot>
