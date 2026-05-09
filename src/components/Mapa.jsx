@@ -1,3 +1,13 @@
+/**
+ * Mapa.jsx
+ *
+ * Vista que muestra todas las materias de la carrera organizadas por semestre.
+ * Al hacer click en una materia, abre un modal con su detalle completo.
+ *
+ * Props:
+ * @param {Object} session - { token, nombre, carreraId }
+ */
+
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
@@ -79,7 +89,7 @@ export default function Mapa({ session }) {
         >
           {mapa.nombre}
         </div>
-        <h1 style={{ fontSize: "1.8rem", fontWeight: "800" }}>
+        <h1 style={{ fontSize: "1.0rem", fontWeight: "500" }}>
           Mapa de correlativas
         </h1>
         <span

@@ -85,7 +85,7 @@ export default function Dashboard({ session }) {
             >
               {session.carrera || "Informática"} · {new Date().getFullYear()}
             </div>
-            <h1 style={{ fontSize: "1.8rem", fontWeight: "800", margin: 0 }}>
+            <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>
               {mostrarLibreta ? "Libreta de notas" : "Mis materias"}
             </h1>
           </div>
@@ -256,9 +256,7 @@ export default function Dashboard({ session }) {
                     borderTop: "1px solid var(--border)",
                     paddingTop: ".5rem",
                   }}
-                >
-                  {m.periodo}
-                </div>
+                ></div>
               </div>
             );
           })}
