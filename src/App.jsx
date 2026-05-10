@@ -3,6 +3,7 @@ import { storage } from "./api";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
+import Agenda from "./components/Agenda";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -22,13 +23,13 @@ export default function App() {
     <>
       <header className="header">
         <div className="header-logo">
-          {/*ahora agregamos el logo en vez del nombre de la pagina*/}
           <img src="/Fiuni-Logo.svg" alt="FIUNI" height={36} />
         </div>
         <nav className="header-nav">
           {[
             ["dashboard", "Mis Materias"],
             ["mapa", "Mapa"],
+            ["agenda", "Agenda"],
           ].map(([v, label]) => (
             <button
               key={v}
@@ -43,8 +44,6 @@ export default function App() {
                 fontFamily: "Syne, sans-serif",
                 fontSize: ".85rem",
                 fontWeight: "600",
-                background: vista === v ? "var(--accent)" : "transparent",
-                color: vista === v ? "#000" : "var(--text-dim)",
                 transition: "all .2s",
               }}
             >
@@ -63,6 +62,8 @@ export default function App() {
 
       {vista === "dashboard" ? (
         <Dashboard session={session} />
+      ) : vista === "agenda" ? (
+        <Agenda session={session} />
       ) : (
         <Mapa session={session} />
       )}
