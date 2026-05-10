@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 
 export default function ToggleTema() {
   const [tema, setTema] = useState(() => {
@@ -23,7 +25,11 @@ export default function ToggleTema() {
       onClick={toggleTema}
       title={`Switch to ${tema === "light" ? "dark" : "light"} mode`}
     >
-      {tema === "light" ? "Modo Nocturno" : "Modo Dia"}
+      {tema === "light" ? (
+        <FontAwesomeIcon icon={faMoon} />
+      ) : (
+        <FontAwesomeIcon icon={faSun} />
+      )}
     </button>
   );
 }
