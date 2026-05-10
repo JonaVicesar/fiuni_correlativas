@@ -81,10 +81,10 @@ body {
 }
 
 .login-logo {
-  font-size: 2.4rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 500;
   font-family: "Space Mono", monospace;
-  letter-spacing: -1px;
+  letter-spacing: -4px;
   color: var(--text);
   margin-bottom: 0.5rem;
 }
