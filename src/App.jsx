@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { storage } from "./api";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
 import Agenda from "./components/Agenda";
+import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -53,6 +54,7 @@ export default function App() {
         </nav>
 
         <div className="header-user">
+          <ToggleTema />
           <span className="header-nombre"> {session.nombre}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Salir
