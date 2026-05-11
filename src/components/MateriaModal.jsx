@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 //Constantes de notas, falta verificar
 const NOTAS = [
@@ -129,11 +130,9 @@ export default function MateriaModal({
   // busca el registro de la materia clickeada, el pp y asistencia
   const registro = (historialMaterias || []).find((h) => {
     const hn = h.nombreMateria?.toLowerCase().replace(/\*/g, "").trim();
-    //console.log("hn", hn);
     const mn = nombre?.toLowerCase().replace(/\*/g, "").trim();
     return h.codigoMateria?.trim() === id || hn === mn;
   });
-  //console.log("registro", registro);
 
   const pp = registro?.porcentajePP ?? 0;
   const asistPct = registro?.porcentajeAsistencia ?? 0;
@@ -272,7 +271,7 @@ export default function MateriaModal({
             paddingRight: "2rem",
           }}
         >
-          {nombre}
+          {limpiarNombre(nombre)}  {/* ← Nombre limpio */}
         </div>
         <div
           style={{

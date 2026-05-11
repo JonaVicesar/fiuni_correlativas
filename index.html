@@ -9,6 +9,13 @@
       href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;500;700&family=Syne:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <!-- Aplicar tema guardado antes de pintar -->
+    <script>
+      (function() {
+        const tema = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', tema);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

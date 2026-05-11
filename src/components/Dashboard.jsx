@@ -3,6 +3,7 @@ import { apiFetch } from "../api";
 import Spinner from "./Spinner";
 import MateriaModal from "./MateriaModal";
 import Libreta from "./Libreta";
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 function colorAsistencia(porcentaje) {
   if (porcentaje >= 75) return "var(--aprobada)";
@@ -23,14 +24,17 @@ export default function Dashboard({ session }) {
   const [modalMateria, setModalMateria] = useState(null);
   const [historialMaterias, setHistorialMaterias] = useState(null);
   const [mapaMaterias, setMapaMaterias] = useState(null);
-  const [mostrarLibreta, setMostrarLibreta] = useState(false); // Estado para toggle
+  const [mostrarLibreta, setMostrarLibreta] = useState(false);
 
   // carga las materias actuales
   useEffect(() => {
     apiFetch("/materias", { token: session.token })
-      .then((data) =>
-        setMaterias(data.filter((m) => m.anho === new Date().getFullYear())),
-      )
+      .then((data) => {
+        const materiasLimpias = data
+          .filter((m) => m.anho === new Date().getFullYear())
+          .map((m) => ({ ...m, materia: limpiarNombre(m.materia) }));
+        setMaterias(materiasLimpias);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [session.token]);
@@ -83,7 +87,7 @@ export default function Dashboard({ session }) {
                 marginBottom: ".5rem",
               }}
             >
-              {session.carrera || "Informática"} · {new Date().getFullYear()}
+              {session.carrera || "Informática"} - {new Date().getFullYear()}
             </div>
             <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>
               {mostrarLibreta ? "Libreta de notas" : "Mis materias"}
@@ -146,7 +150,7 @@ export default function Dashboard({ session }) {
                 onClick={() => {
                   setModalMateria({
                     id: m.codigoMateria,
-                    nombre: m.materia,
+                    nombre: m.materia, // Ya viene limpio
                     semestre: m.semestre,
                     estado: "cursando",
                   });
@@ -155,7 +159,7 @@ export default function Dashboard({ session }) {
               >
                 <div>
                   <div style={{ fontWeight: "700", fontSize: ".95rem" }}>
-                    {m.materia}
+                    {m.materia} {/* Nombre limpio */}
                   </div>
                   <div
                     style={{
@@ -164,7 +168,7 @@ export default function Dashboard({ session }) {
                       color: "var(--text-dim)",
                     }}
                   >
-                    Cód. {m.codigoMateria} · {m.semestre}° Semestre
+                    Cód. {m.codigoMateria} | {m.semestre} Semestre
                   </div>
                 </div>
 
