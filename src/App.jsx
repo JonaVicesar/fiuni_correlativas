@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { storage } from "./api";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
-import Agenda from "./components/Agenda";
+import Calendario from "./components/Calendario"; // antes Agenda
 import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
           {[
             ["dashboard", "Mis Materias"],
             ["mapa", "Mapa"],
-            ["agenda", "Calendario"],
+            ["calendario", "Calendario"],   // antes "agenda"
           ].map(([v, label]) => (
             <button
               key={v}
@@ -55,7 +55,7 @@ export default function App() {
 
         <div className="header-user">
           <ToggleTema />
-          <span className="header-nombre"> {session.nombre}</span>
+          <span className="header-nombre">{session.nombre}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Salir
           </button>
@@ -64,8 +64,8 @@ export default function App() {
 
       {vista === "dashboard" ? (
         <Dashboard session={session} />
-      ) : vista === "agenda" ? (
-        <Agenda session={session} />
+      ) : vista === "calendario" ? (   // antes "agenda"
+        <Calendario session={session} />
       ) : (
         <Mapa session={session} />
       )}

@@ -1,0 +1,438 @@
+/* =============================================
+   Calendario Académico – Estilos unificados
+   ============================================= */
+
+/* Contenedor principal */
+/* (se hereda de .main) */
+
+/* Header */
+.calendario-header {
+  margin-bottom: 1.5rem;
+}
+.calendario-subtitulo {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 0.5rem;
+}
+.calendario-titulo {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Controles */
+.calendario-controles {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.calendario-navegacion {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.calendario-rango {
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  font-weight: 600;
+  min-width: 150px;
+  text-align: center;
+}
+.calendario-acciones {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Notificaciones */
+.noti-campana {
+  position: relative;
+}
+.btn-campana {
+  padding: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1.2rem;
+  position: relative;
+}
+.btn-campana .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--bloqueada-t);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+.noti-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  min-width: 280px;
+  max-width: 90vw;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 300;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.noti-titulo {
+  font-size: 0.65rem;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-weight: 600;
+}
+.noti-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.7rem;
+}
+.noti-detalle {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+}
+
+/* Filtros */
+.calendario-filtros {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.calendario-filtros select {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(0.65rem, 2vw, 0.7rem);
+  flex: 1 1 auto;
+}
+
+/* Próximos eventos */
+.proximos-eventos {
+  margin-top: 2rem;
+}
+.proximos-titulo {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-family: 'Space Mono', monospace;
+}
+.proximos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sin-eventos {
+  padding: 1rem;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-align: center;
+  background: var(--bg3);
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+}
+.proximo-card {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.proximo-card.oficial {
+  border-style: dashed;
+  border-color: var(--accent);
+  cursor: default;
+}
+.proximo-card:hover:not(.oficial) {
+  border-color: var(--accent);
+}
+.proximo-icono {
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  flex-shrink: 0;
+}
+.proximo-info {
+  flex: 1;
+  min-width: 0;
+}
+.proximo-nombre {
+  font-weight: 600;
+  font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.proximo-detalle {
+  font-size: clamp(0.65rem, 2vw, 0.7rem);
+  color: var(--text-dim);
+}
+.proximo-tipo {
+  font-size: clamp(0.5rem, 1.8vw, 0.6rem);
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  color: #000;
+  font-family: 'Space Mono', monospace;
+  font-weight: 600;
+}
+
+/* =============================================
+   MODAL DE CREACIÓN / EDICIÓN DE EVENTO
+   ============================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-contenido {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  padding: 1.75rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* Campos del formulario (hereda .field de main.css, pero por si acaso) */
+.modal-contenido .field {
+  margin-bottom: 1.25rem;
+}
+.modal-contenido .field label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-weight: 500;
+}
+.modal-contenido .field input,
+.modal-contenido .field textarea,
+.modal-contenido .field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-contenido .field textarea {
+  resize: vertical;
+}
+.modal-contenido .field input:focus,
+.modal-contenido .field textarea:focus,
+.modal-contenido .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+[data-theme="dark"] .modal-contenido .field input:focus,
+[data-theme="dark"] .modal-contenido .field textarea:focus,
+[data-theme="dark"] .modal-contenido .field select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+/* Botones del formulario */
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.modal-actions .btn-primary {
+  flex: 1;
+}
+.modal-actions .btn-eliminar {
+  padding: 0.9rem;
+  border-radius: 500px;
+  border: 1px solid var(--bloqueada-t);
+  background: transparent;
+  color: var(--bloqueada-t);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Mini calendario */
+.fecha-selector {
+  position: relative;
+}
+.fecha-boton {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.fecha-boton.abierto {
+  border-color: var(--accent);
+}
+.mini-calendario {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 4px;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 1rem;
+  z-index: 500;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
+}
+.mini-cal-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.mini-cal-nav button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem 0.5rem;
+}
+.mini-cal-dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.mini-cal-dias > div {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 4px 0;
+  font-family: 'Space Mono', monospace;
+}
+.mini-dia {
+  padding: 8px 0;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-family: 'Space Mono', monospace;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mini-dia.selected {
+  border-color: var(--accent);
+  background: rgba(29,185,84,0.2);
+  font-weight: 700;
+  color: var(--accent);
+}
+.mini-dia.pasado {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Error */
+.error-msg {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+
+/* Spinner */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 1rem;
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.loading-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
