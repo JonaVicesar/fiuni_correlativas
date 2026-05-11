@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./styles/main.css";
+import "./styles/calendario.css"; 
 //import "./styles/responsive.css"; no usamos este archivo, todo se movio a main.css
 
 ReactDOM.createRoot(document.getElementById("root")).render(
