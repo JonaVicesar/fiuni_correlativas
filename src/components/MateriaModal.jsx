@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
-
-// ─── Utilidad para limpiar asteriscos al final del nombre ─────────────
-function limpiarNombre(nombre) {
-  return (nombre || "").replace(/\*+$/, "").trim();
-}
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 //Constantes de notas, falta verificar
 const NOTAS = [

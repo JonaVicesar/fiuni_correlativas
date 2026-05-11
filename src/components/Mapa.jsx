@@ -14,11 +14,7 @@ import { ESTADO_LABELS } from "../constants";
 import Spinner from "./Spinner";
 import NodoMateria from "./NodoMateria";
 import MateriaModal from "./MateriaModal";
-
-// ─── Utilidad para limpiar asteriscos ──────────────────────────────────
-function limpiarNombre(nombre) {
-  return (nombre || "").replace(/\*+$/, "").trim();
-}
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 export default function Mapa({ session }) {
   const [mapa, setMapa] = useState(null); // Datos del mapa de correlativas

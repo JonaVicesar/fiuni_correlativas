@@ -1,12 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
+import { limpiarNombre } from "../utils/limpiarNombre";
 
-// ─── Utilidad para limpiar asteriscos al final de nombres de materias ─────
 // El backend de la FIUNI agrega un "*" a las materias que son correlativas.
 // Esta función los elimina para que la interfaz se vea más limpia.
-function limpiarNombre(nombre) {
-  return (nombre || "").replace(/\*+$/, "").trim();
-}
 
 // ─── CONSTANTES ────────────────────────────────────────────────────────────
 // Días de la semana (versión larga para las vistas)

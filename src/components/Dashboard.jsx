@@ -3,11 +3,7 @@ import { apiFetch } from "../api";
 import Spinner from "./Spinner";
 import MateriaModal from "./MateriaModal";
 import Libreta from "./Libreta";
-
-// ─── Utilidad para limpiar asteriscos ──────────────────────────────────
-function limpiarNombre(nombre) {
-  return (nombre || "").replace(/\*+$/, "").trim();
-}
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 function colorAsistencia(porcentaje) {
   if (porcentaje >= 75) return "var(--aprobada)";

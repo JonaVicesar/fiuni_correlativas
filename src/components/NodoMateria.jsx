@@ -1,9 +1,5 @@
 import { ESTADO_LABELS } from "../constants";
-
-// ─── Utilidad para limpiar asteriscos ──────────────────────────────────
-function limpiarNombre(nombre) {
-  return (nombre || "").replace(/\*+$/, "").trim();
-}
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 export default function NodoMateria({ materia, onClick }) {
   const { estado, nombre, id } = materia;
