@@ -113,28 +113,27 @@ function generarCalendarioICS(eventos) {
 function descargarArchivo(contenido, nombre, tipo = "text/calendar") {
   const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   
+  // Crear el blob una sola vez
+  const blob = new Blob([contenido], { type: tipo });
+  const url = URL.createObjectURL(blob);
+  
   if (esIOS) {
-    // Crear un enlace con una URI de datos en lugar de un Blob
-    const dataUri = "data:text/calendar;charset=utf-8," + encodeURIComponent(contenido);
+    // En iOS, usamos un enlace temporal con la URL del blob.
+    // Safari detecta el tipo MIME y muestra el banner "Abrir en Calendario".
     const link = document.createElement("a");
-    link.href = dataUri;
+    link.href = url;
     link.download = nombre;
     link.style.display = "none";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    // Pequeño aviso porque a veces iOS no abre la app Calendario automáticamente
-    setTimeout(() => {
-      if (confirm("¿Se abrió la app Calendario? Si no, ve a Descargas y abre el archivo.")) {
-        // ok
-      }
-    }, 1000);
+    
+    // Liberar la memoria después de un rato
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
     return;
   }
   
-  // Método con Blob para escritorio y Android (funciona perfectamente)
-  const blob = new Blob([contenido], { type: tipo });
-  const url = URL.createObjectURL(blob);
+  // Para Android y escritorio, el mismo método funciona perfectamente.
   const link = document.createElement("a");
   link.href = url;
   link.download = nombre;
