@@ -24,7 +24,7 @@ export default function App() {
     <>
       <header className="header">
         <div className="header-logo">
-          <img src="/Fiuni-Logo.svg" alt="FIUNI" height={36} />
+          <img src="/Fiuni-Logo.svg" alt="FIUNI" height={32} />
         </div>
         <nav className="header-nav">
           {[
@@ -35,17 +35,11 @@ export default function App() {
             <button
               key={v}
               onClick={() => setVista(v)}
+              className={`nav-btn ${vista === v ? 'active' : ''}`}
               style={{
                 background: vista === v ? "var(--accent)" : "transparent",
-                color: vista === v ? "#000" : "var(--text-dim)",
-                padding: ".4rem .9rem",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Syne, sans-serif",
-                fontSize: ".85rem",
-                fontWeight: "600",
-                transition: "all .2s",
+                color: vista === v ? (document.documentElement.getAttribute('data-theme') === 'dark' ? '#000' : 'white') : "var(--text-dim)",
+                fontWeight: vista === v ? "600" : "500",
               }}
             >
               {label}
@@ -55,7 +49,7 @@ export default function App() {
 
         <div className="header-user">
           <ToggleTema />
-          <span className="header-nombre"> {session.nombre}</span>
+          <span className="header-nombre">{session.nombre}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Salir
           </button>
