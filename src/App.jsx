@@ -30,7 +30,7 @@ export default function App() {
           {[
             ["dashboard", "Mis Materias"],
             ["mapa", "Mapa"],
-            ["agenda", "Agenda"],
+            ["agenda", "Calendario"],
           ].map(([v, label]) => (
             <button
               key={v}

@@ -1,0 +1,28 @@
+name: Limpiar eventos del semestre
+
+on:
+  schedule:
+    - cron: '0 0 1 2,8 *'
+  workflow_dispatch:
+
+jobs:
+  limpiar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calcular fecha límite
+        id: fecha
+        run: |
+          MES=$(date +%m)
+          ANIO=$(date +%Y)
+          if [ "$MES" -ge 2 ] && [ "$MES" -le 7 ]; then
+            echo "fecha=${ANIO}-02-01" >> $GITHUB_OUTPUT
+          else
+            echo "fecha=${ANIO}-08-01" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Ejecutar limpieza
+        run: |
+          curl -X DELETE \
+            "https://dygkwqcuwuqsdcpqfmei.supabase.co/rest/v1/eventos?fecha=lt.${{ steps.fecha.outputs.fecha }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"

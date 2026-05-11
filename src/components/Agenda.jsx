@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 
+// ─── UTILIDAD PARA LIMPIAR ASTERISCOS ─────────────────────────────────────
+function limpiarNombre(nombre) {
+  return (nombre || "").replace(/\*+$/, "").trim();
+}
+
 // ─── CONSTANTES ────────────────────────────────────────────────────────────
 const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MESES = [
@@ -45,11 +50,63 @@ const COLORES_TIPO = {
   tfg: "#c0392b",
 };
 
+// ─── FUNCIONES PARA EXPORTAR ICS ──────────────────────────────────────────
+function escaparICS(texto) {
+  return String(texto)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n');
+}
+
+function generarEventoICS(evento) {
+  const fechaStr = evento.fecha.split('T')[0];
+  const fechaInicio = new Date(fechaStr + 'T00:00:00');
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 1);
+  const fechaFinStr = fechaFin.toISOString().split('T')[0].replace(/-/g, '');
+  return [
+    'BEGIN:VEVENT',
+    `DTSTART;VALUE=DATE:${fechaStr.replace(/-/g, '')}`,
+    `DTEND;VALUE=DATE:${fechaFinStr}`,
+    `SUMMARY:${escaparICS(evento.titulo)}`,
+    `DESCRIPTION:${escaparICS(evento.descripcion || '')} - Materia: ${escaparICS(evento.materia_nombre || '')}`,
+    'LOCATION:FIUNI',
+    'END:VEVENT'
+  ].join('\n');
+}
+
+function generarCalendarioICS(eventos) {
+  const header = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//FIUNI//Agenda Academica//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+  ].join('\n');
+  const footer = 'END:VCALENDAR';
+  const eventosICS = eventos.map(generarEventoICS).join('\n');
+  return `${header}\n${eventosICS}\n${footer}`;
+}
+
+function descargarArchivo(contenido, nombre, tipo = 'text/calendar') {
+  const blob = new Blob([contenido], { type: tipo });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombre;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
 export default function Agenda({ session }) {
   const [eventos, setEventos] = useState([]);
   const [eventosOficiales, setEventosOficiales] = useState([]);
   const [materias, setMaterias] = useState([]);
+  const [materiasIds, setMateriasIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -65,7 +122,6 @@ export default function Agenda({ session }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
 
-  // Nuevo estado para el popover del día
   const [diaSeleccionado, setDiaSeleccionado] = useState(null);
 
   // ─── CARGA DE MATERIAS ──────────────────────────────────────────────────
@@ -73,16 +129,24 @@ export default function Agenda({ session }) {
     try {
       const { apiFetch } = await import("../api");
       const data = await apiFetch("/materias", { token: session.token });
-      const cursando = data.filter((m) => m.anho === new Date().getFullYear());
+      const cursando = data
+        .filter((m) => m.anho === new Date().getFullYear())
+        .map((m) => ({
+          ...m,
+          materia: limpiarNombre(m.materia),
+          semestre: limpiarNombre(m.semestre), // por si acaso
+        }));
       setMaterias(cursando);
+      setMateriasIds(cursando.map(m => m.codigoMateria));
     } catch {
       setMaterias([]);
+      setMateriasIds([]);
     }
   }, [session.token]);
 
   // ─── CARGA DE EVENTOS DESDE SUPABASE (TIEMPO REAL) ──────────────────────
   useEffect(() => {
-    if (!session?.carreraId) return;
+    if (!session?.carreraId || materiasIds.length === 0) return;
     setLoading(true);
 
     const cargarInicial = async () => {
@@ -90,6 +154,8 @@ export default function Agenda({ session }) {
         .from("eventos")
         .select("*")
         .eq("carrera_id", session.carreraId)
+        .in("materia_id", materiasIds)
+        .is("eliminado_por", null)
         .order("fecha", { ascending: true });
 
       if (error) setError(error.message);
@@ -110,9 +176,20 @@ export default function Agenda({ session }) {
           filter: `carrera_id=eq.${session.carreraId}`,
         },
         (payload) => {
-          if (payload.eventType === "INSERT") setEventos((prev) => [...prev, payload.new]);
-          else if (payload.eventType === "UPDATE") setEventos((prev) => prev.map((e) => (e.id === payload.new.id ? payload.new : e)));
-          else if (payload.eventType === "DELETE") setEventos((prev) => prev.filter((e) => e.id !== payload.old.id));
+          const evento = payload.new || payload.old;
+          if (evento && materiasIds.includes(evento.materia_id)) {
+            if (payload.eventType === "INSERT") {
+              if (!payload.new.eliminado_por) setEventos((prev) => [...prev, payload.new]);
+            } else if (payload.eventType === "UPDATE") {
+              if (payload.new.eliminado_por) {
+                setEventos((prev) => prev.filter((e) => e.id !== payload.new.id));
+              } else {
+                setEventos((prev) => prev.map((e) => (e.id === payload.new.id ? payload.new : e)));
+              }
+            } else if (payload.eventType === "DELETE") {
+              setEventos((prev) => prev.filter((e) => e.id !== payload.old.id));
+            }
+          }
         }
       )
       .subscribe();
@@ -120,7 +197,7 @@ export default function Agenda({ session }) {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [session.carreraId]);
+  }, [session.carreraId, materiasIds]);
 
   // ─── CARGA DE CALENDARIO ACADÉMICO OFICIAL ─────────────────────────────
   useEffect(() => {
@@ -243,7 +320,7 @@ export default function Agenda({ session }) {
             titulo: datosEvento.titulo,
             descripcion: datosEvento.descripcion,
             materia_id: datosEvento.materiaId,
-            materia_nombre: datosEvento.materiaNombre,
+            materia_nombre: limpiarNombre(datosEvento.materiaNombre), // guardar limpio
             tipo: datosEvento.tipo,
             fecha: datosEvento.fecha,
           })
@@ -255,10 +332,11 @@ export default function Agenda({ session }) {
             titulo: datosEvento.titulo,
             descripcion: datosEvento.descripcion,
             materia_id: datosEvento.materiaId,
-            materia_nombre: datosEvento.materiaNombre,
+            materia_nombre: limpiarNombre(datosEvento.materiaNombre), // guardar limpio
             tipo: datosEvento.tipo,
             fecha: datosEvento.fecha,
             carrera_id: session.carreraId,
+            creado_por: session.nombre,
           },
         ]);
         if (error) throw error;
@@ -273,13 +351,27 @@ export default function Agenda({ session }) {
   const handleEliminarEvento = async (eventoId) => {
     if (!confirm("¿Estás seguro de eliminar este evento?")) return;
     try {
-      const { error } = await supabase.from("eventos").delete().eq("id", eventoId);
+      const { error } = await supabase
+        .from("eventos")
+        .update({ eliminado_por: session.nombre })
+        .eq("id", eventoId);
       if (error) throw error;
       setMostrarModal(false);
       setEventoEditando(null);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  // ─── EXPORTAR A ICS ─────────────────────────────────────────────────────
+  const descargarTodosEventos = () => {
+    const eventosEstudiante = todosLosEventos.filter(e => !e.es_oficial);
+    if (eventosEstudiante.length === 0) {
+      alert("No hay eventos de tus materias para exportar.");
+      return;
+    }
+    const ics = generarCalendarioICS(eventosEstudiante);
+    descargarArchivo(ics, 'calendario_fiuni.ics');
   };
 
   // ─── FORMATEO ───────────────────────────────────────────────────────────
@@ -296,7 +388,7 @@ export default function Agenda({ session }) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
         <div className="spinner" />
-        <span style={{ color: "var(--text-dim)" }}>Cargando agenda...</span>
+        <span style={{ color: "var(--text-dim)" }}>Cargando calendario...</span>
       </div>
     );
   }
@@ -312,7 +404,7 @@ export default function Agenda({ session }) {
         <div style={{ fontSize: ".75rem", textTransform: "uppercase", letterSpacing: "3px", color: "var(--text-dim)", fontFamily: "Space Mono, monospace", marginBottom: ".5rem" }}>
           Calendario Académico
         </div>
-        <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>Agenda</h1>
+        <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>Calendario</h1>
       </div>
 
       {/* ─── BARRA DE CONTROLES ────────────────────────────────────────── */}
@@ -346,7 +438,7 @@ export default function Agenda({ session }) {
                         {ICONOS_TIPO[evento.tipo] || "📅"} {evento.titulo}
                       </div>
                       <div style={{ color: "var(--text-dim)", fontSize: "0.65rem" }}>
-                        {evento.materia_nombre} · {formatearFecha(evento.fecha)}
+                        {limpiarNombre(evento.materia_nombre || "")} · {formatearFecha(evento.fecha)}
                       </div>
                     </div>
                   ))}
@@ -359,6 +451,23 @@ export default function Agenda({ session }) {
             <button onClick={() => setVista("mensual")} style={{ padding: "0.4rem 0.8rem", border: "none", background: vista === "mensual" ? "var(--accent)" : "transparent", color: vista === "mensual" ? "#000" : "var(--text-dim)", cursor: "pointer", fontFamily: "Space Mono, monospace", fontSize: "0.7rem" }}>Mes</button>
             <button onClick={() => setVista("semanal")} style={{ padding: "0.4rem 0.8rem", border: "none", background: vista === "semanal" ? "var(--accent)" : "transparent", color: vista === "semanal" ? "#000" : "var(--text-dim)", cursor: "pointer", fontFamily: "Space Mono, monospace", fontSize: "0.7rem" }}>Semana</button>
           </div>
+
+          {/* ─── BOTÓN DE EXPORTACIÓN ──────────────────────────────────── */}
+          <button
+            onClick={descargarTodosEventos}
+            title="Exportar mis eventos a calendario"
+            style={{
+              padding: "0.5rem",
+              borderRadius: "8px",
+              border: "1px solid var(--border2)",
+              background: "transparent",
+              color: "var(--text-dim)",
+              cursor: "pointer",
+              fontSize: "1.2rem",
+            }}
+          >
+            📤
+          </button>
 
           <button onClick={() => { setEventoEditando(null); setMostrarModal(true); }} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "none", background: "var(--accent)", color: "#000", fontWeight: "600", cursor: "pointer", fontFamily: "Space Mono, monospace", fontSize: "0.75rem" }}>
             + Nuevo
@@ -440,7 +549,7 @@ export default function Agenda({ session }) {
                     {eventosHoy.slice(0, 3).map((evento) => (
                       <div
                         key={evento.id}
-                        title={`${evento.titulo} - ${evento.materia_nombre || ""}`}
+                        title={`${evento.titulo} - ${limpiarNombre(evento.materia_nombre || "")}${evento.creado_por ? ' (creado por ' + evento.creado_por + ')' : ''}`}
                         onClick={() => {
                           if (evento.es_oficial) return;
                           setEventoEditando(evento);
@@ -543,7 +652,7 @@ export default function Agenda({ session }) {
                         {ICONOS_TIPO[evento.tipo] || "📅"} {evento.titulo}
                       </div>
                       <div style={{ fontSize: "clamp(0.4rem, 1.5vw, 0.55rem)", opacity: 0.8 }}>
-                        {evento.materia_nombre}
+                        {limpiarNombre(evento.materia_nombre || "")}
                       </div>
                     </div>
                   ))}
@@ -609,7 +718,7 @@ export default function Agenda({ session }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: "600", fontSize: "clamp(0.75rem, 2.5vw, 0.85rem)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{evento.titulo}</div>
                   <div style={{ fontSize: "clamp(0.65rem, 2vw, 0.7rem)", color: "var(--text-dim)" }}>
-                    {materia?.materia || evento.materia_nombre} · {formatearFecha(evento.fecha)}
+                    {materia?.materia || limpiarNombre(evento.materia_nombre || "")} · {formatearFecha(evento.fecha)}
                   </div>
                 </div>
                 <div style={{
@@ -641,6 +750,7 @@ export default function Agenda({ session }) {
             setMostrarModal(false);
             setEventoEditando(null);
           }}
+          session={session}
         />
       )}
 
@@ -712,7 +822,8 @@ export default function Agenda({ session }) {
                       {ICONOS_TIPO[evento.tipo] || "📅"} {evento.titulo}
                     </div>
                     <div style={{ fontSize: "0.7rem", opacity: 0.9 }}>
-                      {evento.materia_nombre}
+                      {limpiarNombre(evento.materia_nombre || "")}
+                      {evento.creado_por && <span> · Creado por: {evento.creado_por}</span>}
                       {evento.descripcion && ` · ${evento.descripcion}`}
                     </div>
                   </div>
@@ -727,12 +838,12 @@ export default function Agenda({ session }) {
 }
 
 // ─── COMPONENTE MODAL ──────────────────────────────────────────────────────
-function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
+function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
   const [form, setForm] = useState({
     titulo: evento?.titulo || "",
     descripcion: evento?.descripcion || "",
     materiaId: evento?.materia_id || "",
-    materiaNombre: evento?.materia_nombre || "",
+    materiaNombre: limpiarNombre(evento?.materia_nombre || ""),
     tipo: evento?.tipo || "parcial",
     fecha: evento?.fecha
       ? new Date(evento.fecha).toISOString().slice(0, 10)
@@ -780,9 +891,18 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     if (!form.titulo.trim()) { setError("El título es obligatorio"); return; }
     if (!form.materiaId) { setError("Debe seleccionar una materia"); return; }
     if (!form.fecha) { setError("Debe seleccionar una fecha"); return; }
+
+    const fechaSeleccionadaDate = new Date(form.fecha + "T00:00:00");
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (fechaSeleccionadaDate < hoy) {
+      setError("No se pueden agendar eventos en fechas pasadas");
+      return;
+    }
 
     setSaving(true);
     const materia = materias.find((m) => m.codigoMateria === form.materiaId);
@@ -791,7 +911,7 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
         titulo: form.titulo.trim(),
         descripcion: form.descripcion.trim(),
         materiaId: form.materiaId,
-        materiaNombre: materia?.materia || form.materiaId,
+        materiaNombre: limpiarNombre(materia?.materia || form.materiaId),
         tipo: form.tipo,
         fecha: new Date(form.fecha + "T00:00:00").toISOString(),
       });
@@ -804,6 +924,12 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
 
   const hoy = new Date();
   const esHoy = (dia) => dia === hoy.getDate() && calendarioMes === hoy.getMonth() && calendarioAnio === hoy.getFullYear();
+  const esPasado = (dia) => {
+    const fechaComparar = new Date(calendarioAnio, calendarioMes, dia);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return fechaComparar < hoy;
+  };
   const esSeleccionado = (dia) => {
     const fc = `${calendarioAnio}-${String(calendarioMes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
     return fc === form.fecha;
@@ -874,19 +1000,24 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
                     {dias.map((dia, index) => {
                       if (dia === null) return <div key={`empty-${index}`} />;
                       const isHoy = esHoy(dia);
+                      const isPasado = esPasado(dia);
                       const isSelected = esSeleccionado(dia);
                       return (
-                        <button key={index} type="button" onClick={() => seleccionarFecha(dia)}
+                        <button key={index} type="button" onClick={() => !isPasado && seleccionarFecha(dia)}
+                          disabled={isPasado}
                           style={{
-                            padding: "8px 0", textAlign: "center", fontSize: "0.75rem", fontWeight: isSelected ? "700" : "400",
+                            padding: "8px 0", textAlign: "center", fontSize: "0.75rem",
+                            fontWeight: isSelected ? "700" : "400",
                             fontFamily: "Space Mono, monospace", borderRadius: "8px",
                             border: isSelected ? "2px solid var(--accent)" : "1px solid transparent",
                             background: isSelected ? "rgba(29,185,84,0.2)" : isHoy ? "rgba(29,185,84,0.08)" : "transparent",
-                            color: isSelected ? "var(--accent)" : isHoy ? "var(--accent)" : "var(--text)",
-                            cursor: "pointer", transition: "all 0.15s",
+                            color: isPasado ? "var(--text-dim)" : isSelected ? "var(--accent)" : isHoy ? "var(--accent)" : "var(--text)",
+                            cursor: isPasado ? "not-allowed" : "pointer",
+                            opacity: isPasado ? 0.4 : 1,
+                            transition: "all 0.15s",
                           }}
-                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "rgba(29,185,84,0.1)"; }}
-                          onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = isHoy ? "rgba(29,185,84,0.08)" : "transparent"; }}
+                          onMouseEnter={(e) => { if (!isSelected && !isPasado) e.currentTarget.style.background = "rgba(29,185,84,0.1)"; }}
+                          onMouseLeave={(e) => { if (!isSelected && !isPasado) e.currentTarget.style.background = isHoy ? "rgba(29,185,84,0.08)" : "transparent"; }}
                         >
                           {dia}
                         </button>

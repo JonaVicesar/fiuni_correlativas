@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 
+// ─── Utilidad para limpiar asteriscos ──────────────────────────────────
+function limpiarNombre(nombre) {
+  return (nombre || "").replace(/\*+$/, "").trim();
+}
+
 // convierte numeros a letras
 function numeroALetras(num) {
   if (num === null || num === undefined) return "";
@@ -91,7 +96,7 @@ export default function Libreta({ session }) {
           return [
             {
               codigo: materia.materiaCodigo,
-              nombre: materia.materia,
+              nombre: limpiarNombre(materia.materia),
               nota: null,
               notaLetras: "",
               acta: "",
@@ -122,7 +127,7 @@ export default function Libreta({ session }) {
         // Crear una fila por cada mesa rendida
         return mesasRendidas.map((cal) => ({
           codigo: materia.materiaCodigo,
-          nombre: materia.materia,
+          nombre: limpiarNombre(materia.materia),
           nota: cal.calificacion,
           notaLetras: numeroALetras(cal.calificacion),
           acta: cal.nroActa || "",
@@ -392,7 +397,7 @@ export default function Libreta({ session }) {
                             {materia.codigo}
                           </td>
                           <td style={{ padding: "0.5rem 0.25rem" }}>
-                            {materia.nombre}
+                            {materia.nombre} {/* Ya viene limpio */}
                           </td>
                           <td
                             style={{

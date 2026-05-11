@@ -15,6 +15,11 @@ import Spinner from "./Spinner";
 import NodoMateria from "./NodoMateria";
 import MateriaModal from "./MateriaModal";
 
+// ─── Utilidad para limpiar asteriscos ──────────────────────────────────
+function limpiarNombre(nombre) {
+  return (nombre || "").replace(/\*+$/, "").trim();
+}
+
 export default function Mapa({ session }) {
   const [mapa, setMapa] = useState(null); // Datos del mapa de correlativas
   const [loading, setLoading] = useState(true);
@@ -26,7 +31,16 @@ export default function Mapa({ session }) {
   useEffect(() => {
     const query = session.carreraId ? `?carrera_id=${session.carreraId}` : "";
     apiFetch(`/mapa${query}`, { token: session.token })
-      .then(setMapa)
+      .then((data) => {
+        // Limpiar los nombres de todas las materias del mapa
+        if (data && data.materias) {
+          data.materias = data.materias.map((m) => ({
+            ...m,
+            nombre: limpiarNombre(m.nombre),
+          }));
+        }
+        setMapa(data);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [session.token, session.carreraId]);
