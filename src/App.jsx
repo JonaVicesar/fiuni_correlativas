@@ -4,6 +4,7 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
 import Calendario from "./components/Calendario"; // antes Agenda
+import Agenda from "./components/Calendario";
 import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
