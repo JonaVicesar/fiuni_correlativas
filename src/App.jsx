@@ -3,7 +3,7 @@ import { storage } from "./api";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
-import Agenda from "./components/Agenda";
+import Agenda from "./components/Calendario";
 import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
