@@ -6,7 +6,7 @@
 
 /* variables para los temas */
 :root {
-  /* por defecto ligth */
+  /* por defecto light */
   --bg: #ffffff;
   --bg2: #f7fafc;
   --bg3: #ffffff;
@@ -25,6 +25,10 @@
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* color suave del acento para fondos */
+  --accent-light: rgba(229, 62, 62, 0.1);
+  /* sombra para campos de texto al hacer foco */
+  --accent-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
 }
 
 /* tema dark  */
@@ -46,6 +50,10 @@
   --bloqueada-t: #ff6b6b;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.4);
+  /* color suave del acento para fondos en dark */
+  --accent-light: rgba(255, 215, 0, 0.15);
+  /* sombra para campos de texto al hacer foco en dark */
+  --accent-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
 }
 
 body {
@@ -127,15 +135,13 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* al escribir en un campo, se resalta con el color del tema */
 .field input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+  box-shadow: var(--accent-shadow);
 }
 
-[data-theme="dark"] .field input:focus {
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
-}
-
+/* botón principal */
 .btn-primary {
   width: 100%;
   padding: 0.9rem;
@@ -185,7 +191,8 @@ body {
   padding: 0.75rem 2rem;
   background: var(--bg3);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  /* línea inferior más gruesa del color del tema */
+  border-bottom: 2px solid var(--accent);
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
@@ -223,11 +230,12 @@ body {
   gap: 1rem;
 }
 
+/* nombre del usuario: ahora tiene más espacio para mostrarse completo en PC */
 .header-nombre {
   font-size: 0.75rem;
   color: var(--text-dim);
   font-family: "Space Mono", monospace;
-  max-width: 120px;
+  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -245,9 +253,11 @@ body {
   transition: all 0.2s;
 }
 
+/* al pasar el mouse sobre "Salir", se resalta con el color del tema */
 .btn-logout:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-light);
 }
 
 .theme-toggle {
@@ -267,14 +277,11 @@ body {
   line-height: 1;
 }
 
+/* al pasar el mouse sobre el botón de tema, se ilumina con el color del tema */
 .theme-toggle:hover {
   border-color: var(--accent);
-  background: rgba(229, 62, 62, 0.1);
+  background: var(--accent-light);
   transform: rotate(15deg);
-}
-
-[data-theme="dark"] .theme-toggle:hover {
-  background: rgba(255, 215, 0, 0.1);
 }
 
 /* Main */
@@ -284,7 +291,7 @@ body {
   margin: 0 auto;
 }
 
-/* Hero */
+/* Hero (estadísticas del mapa) */
 .hero {
   display: flex;
   flex-wrap: wrap;
@@ -295,6 +302,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow);
+  /* línea gruesa a la izquierda para darle más color */
+  border-left: 4px solid var(--accent);
 }
 
 .hero-item {
@@ -313,7 +322,7 @@ body {
   flex-shrink: 0;
 }
 
-/* Semestres */
+/* Semestres (mapa de correlativas) */
 .semestre-block {
   margin-bottom: 2rem;
 }
@@ -343,7 +352,7 @@ body {
   gap: 0.75rem;
 }
 
-/* Nodo Materia */
+/* Nodo Materia (cada materia en el mapa) */
 .nodo {
   padding: 0.75rem 1rem;
   border-radius: 12px;
@@ -351,21 +360,25 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
-  min-width: 160px;
+  /* ancho más grande y uniforme */
+  min-width: 180px;
   max-width: 220px;
+  flex: 1 1 180px;
   background: var(--bg3);
   box-shadow: var(--shadow);
 }
 
+/* al pasar el mouse por una materia, se eleva y se rodea del color del tema */
 .nodo:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 2px var(--accent);
 }
 
 .nodo-nombre {
   font-weight: 600;
   font-size: 0.85rem;
   font-family: "Syne", sans-serif;
+  /* quitamos los cortes para que se lea completo */
 }
 
 .nodo-id {
@@ -397,7 +410,7 @@ body {
 .badge-disponible { background: var(--disponible); color: #000; }
 .badge-bloqueada { background: var(--bloqueada); color: var(--bloqueada-t); }
 
-/* Botones */
+/* Botones varios */
 .btn-mapa {
   background: transparent;
   border: 1px solid var(--border2);
@@ -414,15 +427,11 @@ body {
 
 .btn-mapa:hover {
   border-color: var(--accent);
-  background: rgba(229, 62, 62, 0.1);
+  background: var(--accent-light);
   color: var(--accent);
 }
 
-[data-theme="dark"] .btn-mapa:hover {
-  background: rgba(255, 215, 0, 0.1);
-}
-
-/* Cards en dashboard */
+/* Cards en dashboard (Mis materias) */
 .card-materia {
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -435,10 +444,11 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* al pasar el mouse, se resalta con el color del tema */
 .card-materia:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 2px var(--accent-light);
 }
 
 /* loader */
@@ -485,24 +495,17 @@ body {
   align-items: flex-start;
 }
 
+/* tamaño base de cada nodo de materia */
 .nodo {
-  flex: 1 1 140px;
+  flex: 1 1 180px;
   max-width: 220px;
-  min-width: 130px;
+  min-width: 180px;
 }
 
 /* login logo en una sola linea */
 .login-logo {
   white-space: nowrap;
   font-size: 2rem;
-}
-
-/* nombre de usuario no rompe el header */
-.header-nombre {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* pantallas ≤ 768px */
@@ -513,14 +516,15 @@ body {
   }
   .header-logo { font-size: 0.9rem; }
 
-  .header-nombre { max-width: 90px; }
+  .header-nombre { max-width: 200px; }
 
   .main { padding: 1rem; }
 
   /* materias en dos columnas minimo */
   .nodo {
-    flex: 1 1 120px;
-    max-width: 48%;
+    flex: 1 1 160px;
+    max-width: 200px;
+    min-width: 160px;
   }
 
   .panel-overlay { align-items: flex-end; }
@@ -561,8 +565,10 @@ body {
     padding: 0.35rem 0.5rem;
   }
 
-  /* ocultar el nombre de usuario en pantallas mas pequenhas */
-  .header-nombre { display: none; }
+  /* en móviles ocultamos el nombre de usuario para ahorrar espacio */
+  .header-nombre {
+    display: none;
+  }
 
   .main { padding: 0.85rem; }
 
