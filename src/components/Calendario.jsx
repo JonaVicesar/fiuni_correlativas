@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { limpiarNombre } from "../utils/limpiarNombre";
+import { parseJwt } from "../api";
 
 // El backend de la FIUNI agrega un "*" a las materias que son correlativas.
 // Esta función los elimina para que la interfaz se vea más limpia.
@@ -11,8 +12,18 @@ const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 // Nombres de los meses en español (para el encabezado del calendario)
 const MESES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ];
 
 // Alias para el mini calendario dentro del modal
@@ -25,28 +36,38 @@ const DIAS_SEMANA_CAL = ["L", "M", "M", "J", "V", "S", "D"];
 // Cada tipo de evento (parcial, final, feriado, etc.) tiene un emoji y un color
 // que lo identifican visualmente en el calendario.
 const ICONOS_TIPO = {
-  parcial: "📝", final: "📚", tarea: "📋", otro: "📌",
-  feriado: "🏖️", inicio_clases: "🎓", fin_clases: "🏁",
-  receso: "⏸️", inscripcion: "📝", regularizacion: "🔄",
-  complementario: "🔁", cierre_periodo: "🔒", administrativo: "📋",
-  proyecto: "📁", tfg: "🎯",
+  parcial: "📝",
+  final: "📚",
+  tarea: "📋",
+  otro: "📌",
+  feriado: "🏖️",
+  inicio_clases: "🎓",
+  fin_clases: "🏁",
+  receso: "⏸️",
+  inscripcion: "📝",
+  regularizacion: "🔄",
+  complementario: "🔁",
+  cierre_periodo: "🔒",
+  administrativo: "📋",
+  proyecto: "📁",
+  tfg: "🎯",
 };
 
 const COLORES_TIPO = {
-  parcial: "var(--cursando)",      // Azul (definido en main.css)
-  final: "var(--bloqueada-t)",     // Rojo
-  tarea: "var(--disponible)",      // Amarillo
-  otro: "var(--accent)",           // Color de acento (rojo o dorado según tema)
-  feriado: "#9b59b6",              // Púrpura fijo
-  inicio_clases: "#2ecc71",        // Verde
-  fin_clases: "#e74c3c",           // Rojo oscuro
-  inscripcion: "#3498db",          // Azul
-  regularizacion: "#f39c12",       // Naranja
-  complementario: "#e67e22",       // Naranja oscuro
-  cierre_periodo: "#95a5a6",       // Gris
-  administrativo: "#7f8c8d",       // Gris oscuro
-  proyecto: "#8e44ad",             // Violeta
-  tfg: "#c0392b",                  // Rojo intenso
+  parcial: "var(--cursando)", // Azul (definido en main.css)
+  final: "var(--bloqueada-t)", // Rojo
+  tarea: "var(--disponible)", // Amarillo
+  otro: "var(--accent)", // Color de acento (rojo o dorado según tema)
+  feriado: "#9b59b6", // Púrpura fijo
+  inicio_clases: "#2ecc71", // Verde
+  fin_clases: "#e74c3c", // Rojo oscuro
+  inscripcion: "#3498db", // Azul
+  regularizacion: "#f39c12", // Naranja
+  complementario: "#e67e22", // Naranja oscuro
+  cierre_periodo: "#95a5a6", // Gris
+  administrativo: "#7f8c8d", // Gris oscuro
+  proyecto: "#8e44ad", // Violeta
+  tfg: "#c0392b", // Rojo intenso
 };
 
 // ─── FUNCIONES PARA EXPORTAR ICS (archivo de calendario) ──────────────────
@@ -80,7 +101,7 @@ function generarEventoICS(evento) {
     `DTEND;VALUE=DATE:${fechaFinStr}`,
     `SUMMARY:${escaparICS(evento.titulo)}`,
     `DESCRIPTION:${escaparICS(evento.descripcion || "")} - Materia: ${escaparICS(evento.materia_nombre || "")}`,
-    `UID:${evento.id}@fiuni.edu.py`,   // Identificador único para evitar duplicados
+    `UID:${evento.id}@fiuni.edu.py`, // Identificador único para evitar duplicados
     "LOCATION:FIUNI",
     "END:VEVENT",
   ].join("\n");
@@ -109,11 +130,11 @@ function generarCalendarioICS(eventos) {
  */
 function descargarArchivo(contenido, nombre, tipo = "text/calendar") {
   const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  
+
   // Crear el blob una sola vez
   const blob = new Blob([contenido], { type: tipo });
   const url = URL.createObjectURL(blob);
-  
+
   if (esIOS) {
     // En iOS, usamos un enlace temporal con la URL del blob.
     // Safari detecta el tipo MIME y muestra el banner "Abrir en Calendario".
@@ -124,12 +145,12 @@ function descargarArchivo(contenido, nombre, tipo = "text/calendar") {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Liberar la memoria después de un rato
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     return;
   }
-  
+
   // Para Android y escritorio, el mismo método funciona perfectamente.
   const link = document.createElement("a");
   link.href = url;
@@ -143,23 +164,23 @@ function descargarArchivo(contenido, nombre, tipo = "text/calendar") {
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
 export default function Calendario({ session }) {
   // ─── ESTADOS ──────────────────────────────────────────────────────────
-  const [eventos, setEventos] = useState([]);               // Eventos de estudiantes (de la tabla "eventos")
+  const [eventos, setEventos] = useState([]); // Eventos de estudiantes (de la tabla "eventos")
   const [eventosOficiales, setEventosOficiales] = useState([]); // Eventos del calendario académico oficial
-  const [materias, setMaterias] = useState([]);             // Materias que cursa el estudiante
-  const [materiasIds, setMateriasIds] = useState([]);       // Solo los IDs (para filtrar eventos)
-  const [loading, setLoading] = useState(true);             // Controla el spinner de carga inicial
-  const [error, setError] = useState("");                   // Mensaje de error global
+  const [materias, setMaterias] = useState([]); // Materias que cursa el estudiante
+  const [materiasIds, setMateriasIds] = useState([]); // Solo los IDs (para filtrar eventos)
+  const [loading, setLoading] = useState(true); // Controla el spinner de carga inicial
+  const [error, setError] = useState(""); // Mensaje de error global
 
   const [fechaActual, setFechaActual] = useState(new Date()); // Fecha de referencia para la vista
-  const [vista, setVista] = useState("mensual");             // "mensual" o "semanal"
+  const [vista, setVista] = useState("mensual"); // "mensual" o "semanal"
 
-  const [mostrarModal, setMostrarModal] = useState(false);   // Controla el modal de crear/editar
+  const [mostrarModal, setMostrarModal] = useState(false); // Controla el modal de crear/editar
   const [eventoEditando, setEventoEditando] = useState(null); // Evento que se está editando (null = nuevo)
 
   const [filtroMateria, setFiltroMateria] = useState("todas"); // Filtro por materia
-  const [filtroTipo, setFiltroTipo] = useState("todos");       // Filtro por tipo de evento
+  const [filtroTipo, setFiltroTipo] = useState("todos"); // Filtro por tipo de evento
 
-  const [notificaciones, setNotificaciones] = useState([]);     // Próximos eventos (3 días)
+  const [notificaciones, setNotificaciones] = useState([]); // Próximos eventos (3 días)
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false); // Dropdown de notificaciones
   const [diaSeleccionado, setDiaSeleccionado] = useState(null); // Día seleccionado para el popover
 
@@ -188,9 +209,9 @@ export default function Calendario({ session }) {
           const { data: eventosData, error: eventosError } = await supabase
             .from("eventos")
             .select("*")
-            .eq("carrera_id", session.carreraId)   // Solo de su carrera
-            .in("materia_id", ids)                 // Solo de las materias que cursa
-            .is("eliminado_por", null)             // Ocultar los eliminados (soft delete)
+            .eq("carrera_id", session.carreraId) // Solo de su carrera
+            .in("materia_id", ids) // Solo de las materias que cursa
+            .is("eliminado_por", null) // Ocultar los eliminados (soft delete)
             .order("fecha", { ascending: true });
 
           if (eventosError) setError(eventosError.message);
@@ -219,7 +240,7 @@ export default function Calendario({ session }) {
       .on(
         "postgres_changes",
         {
-          event: "*",               // Escuchar INSERT, UPDATE y DELETE
+          event: "*", // Escuchar INSERT, UPDATE y DELETE
           schema: "public",
           table: "eventos",
           filter: `carrera_id=eq.${session.carreraId}`, // Solo eventos de su carrera
@@ -229,14 +250,18 @@ export default function Calendario({ session }) {
           // Solo procesar si el evento pertenece a una de las materias del usuario
           if (ev && materiasIds.includes(ev.materia_id)) {
             if (payload.eventType === "INSERT") {
-              if (!payload.new.eliminado_por)       // Ignorar si ya viene marcado como eliminado
+              if (!payload.new.eliminado_por)
+                // Ignorar si ya viene marcado como eliminado
                 setEventos((prev) => [...prev, payload.new]);
             } else if (payload.eventType === "UPDATE") {
               if (payload.new.eliminado_por)
-                setEventos((prev) => prev.filter((e) => e.id !== payload.new.id)); // Soft delete
+                setEventos((prev) =>
+                  prev.filter((e) => e.id !== payload.new.id),
+                );
+              // Soft delete
               else
                 setEventos((prev) =>
-                  prev.map((e) => (e.id === payload.new.id ? payload.new : e))
+                  prev.map((e) => (e.id === payload.new.id ? payload.new : e)),
                 );
             } else if (payload.eventType === "DELETE") {
               setEventos((prev) => prev.filter((e) => e.id !== payload.old.id)); // Borrado real
@@ -301,9 +326,13 @@ export default function Calendario({ session }) {
   // ─── NAVEGACIÓN DEL CALENDARIO ──────────────────────────────────────────
   // Funciones para cambiar el mes/semana visible y volver a "hoy".
   const irMesAnterior = () =>
-    setFechaActual(new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1));
+    setFechaActual(
+      new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1),
+    );
   const irMesSiguiente = () =>
-    setFechaActual(new Date(fechaActual.getFullYear(), fechaActual.getMonth() + 1, 1));
+    setFechaActual(
+      new Date(fechaActual.getFullYear(), fechaActual.getMonth() + 1, 1),
+    );
   const irHoy = () => setFechaActual(new Date());
   const irSemanaAnterior = () => {
     const n = new Date(fechaActual);
@@ -370,7 +399,8 @@ export default function Calendario({ session }) {
   // ─── FILTROS ────────────────────────────────────────────────────────────
   // Aplica los filtros de materia y tipo seleccionados por el usuario.
   const eventosFiltrados = todosLosEventos.filter((ev) => {
-    if (filtroMateria !== "todas" && ev.materia_id !== filtroMateria) return false;
+    if (filtroMateria !== "todas" && ev.materia_id !== filtroMateria)
+      return false;
     if (filtroTipo !== "todos" && ev.tipo !== filtroTipo) return false;
     return true;
   });
@@ -386,12 +416,14 @@ export default function Calendario({ session }) {
       );
     });
 
-  // ─── CRUD DE EVENTOS ────────────────────────────────────────────────────
-  // Guarda un evento nuevo o actualiza uno existente en Supabase.
+  // ─── CRUD DE EVENTOS (protegido contra suplantación) ──────────────────
   const handleGuardarEvento = async (datosEvento) => {
     try {
+      // Extraemos el correo real del token (campo unique_name)
+      const payload = parseJwt(session.token);
+      const creador = payload?.unique_name || session.token; // fallback al token si no existe
+
       if (eventoEditando) {
-        // Modo edición: actualizar registro existente
         const { error } = await supabase
           .from("eventos")
           .update({
@@ -405,7 +437,6 @@ export default function Calendario({ session }) {
           .eq("id", eventoEditando.id);
         if (error) throw error;
       } else {
-        // Modo creación: insertar nuevo registro
         const { error } = await supabase.from("eventos").insert([
           {
             titulo: datosEvento.titulo,
@@ -415,31 +446,43 @@ export default function Calendario({ session }) {
             tipo: datosEvento.tipo,
             fecha: datosEvento.fecha,
             carrera_id: session.carreraId,
-            creado_por: session.nombre, // Quién lo creó (trazabilidad)
+            creado_por: creador, // ← correo real extraído del token
           },
         ]);
         if (error) throw error;
       }
-      setMostrarModal(false);   // Cerrar el modal
-      setEventoEditando(null);  // Limpiar estado de edición
+      setMostrarModal(false);
+      setEventoEditando(null);
     } catch (err) {
-      throw err; // El modal captura el error y lo muestra
+      throw err;
     }
   };
 
-  // Marca un evento como eliminado (soft delete) guardando quién lo borró.
   const handleEliminarEvento = async (eventoId) => {
     if (!confirm("¿Estás seguro de eliminar este evento?")) return;
     try {
+      const payload = parseJwt(session.token);
+      const eliminador = payload?.unique_name || session.token;
+
       await supabase
         .from("eventos")
-        .update({ eliminado_por: session.nombre }) // Soft delete: no se borra, solo se oculta
+        .update({ eliminado_por: eliminador }) // ← correo real extraído del token
         .eq("id", eventoId);
+
       setMostrarModal(false);
       setEventoEditando(null);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const obtenerNombre = (userId) => {
+    if (!userId) return "";
+    // Si es un correo (contiene @), es el identificador real, lo mostramos tal cual
+    if (userId.includes("@")) return userId;
+    // Si es el token antiguo, mostramos el correo del token actual o un resumen
+    const payload = parseJwt(userId);
+    return payload?.unique_name || "Otro usuario";
   };
 
   // ─── EXPORTAR A ICS ─────────────────────────────────────────────────────
@@ -494,7 +537,9 @@ export default function Calendario({ session }) {
         >
           Calendario Académico
         </div>
-        <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>Calendario</h1>
+        <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>
+          Calendario
+        </h1>
       </div>
 
       {/* ─── BARRA DE CONTROLES ────────────────────────────────────────── */}
@@ -509,7 +554,14 @@ export default function Calendario({ session }) {
         }}
       >
         {/* Navegación: flechas + mes/año + botón Hoy */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            flexWrap: "wrap",
+          }}
+        >
           <button
             onClick={vista === "mensual" ? irMesAnterior : irSemanaAnterior}
             className="btn-logout"
@@ -553,7 +605,14 @@ export default function Calendario({ session }) {
         </div>
 
         {/* Acciones: campana de notificaciones, toggle vista, exportar, nuevo evento */}
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           {/* Campana de notificaciones (solo visible si hay próximos eventos) */}
           {notificaciones.length > 0 && (
             <div style={{ position: "relative" }}>
@@ -634,13 +693,21 @@ export default function Calendario({ session }) {
                       <div
                         style={{
                           fontWeight: "600",
-                          color: ev.es_oficial ? "var(--accent)" : COLORES_TIPO[ev.tipo],
+                          color: ev.es_oficial
+                            ? "var(--accent)"
+                            : COLORES_TIPO[ev.tipo],
                         }}
                       >
                         {ICONOS_TIPO[ev.tipo] || "📅"} {ev.titulo}
                       </div>
-                      <div style={{ color: "var(--text-dim)", fontSize: "0.65rem" }}>
-                        {limpiarNombre(ev.materia_nombre || "")} · {formatearFecha(ev.fecha)}
+                      <div
+                        style={{
+                          color: "var(--text-dim)",
+                          fontSize: "0.65rem",
+                        }}
+                      >
+                        {limpiarNombre(ev.materia_nombre || "")} ·{" "}
+                        {formatearFecha(ev.fecha)}
                       </div>
                     </div>
                   ))}
@@ -663,7 +730,8 @@ export default function Calendario({ session }) {
               style={{
                 padding: "0.4rem 0.8rem",
                 border: "none",
-                background: vista === "mensual" ? "var(--accent)" : "transparent",
+                background:
+                  vista === "mensual" ? "var(--accent)" : "transparent",
                 color: vista === "mensual" ? "#000" : "var(--text-dim)",
                 cursor: "pointer",
                 fontFamily: "Space Mono, monospace",
@@ -677,7 +745,8 @@ export default function Calendario({ session }) {
               style={{
                 padding: "0.4rem 0.8rem",
                 border: "none",
-                background: vista === "semanal" ? "var(--accent)" : "transparent",
+                background:
+                  vista === "semanal" ? "var(--accent)" : "transparent",
                 color: vista === "semanal" ? "#000" : "var(--text-dim)",
                 cursor: "pointer",
                 fontFamily: "Space Mono, monospace",
@@ -729,7 +798,14 @@ export default function Calendario({ session }) {
       </div>
 
       {/* ─── FILTROS ───────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "0.75rem",
+          marginBottom: "1.5rem",
+          flexWrap: "wrap",
+        }}
+      >
         {/* Selector de materia */}
         <select
           value={filtroMateria}
@@ -822,7 +898,9 @@ export default function Calendario({ session }) {
           </div>
 
           {/* Cuadrícula de días */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}
+          >
             {dias.map(({ fecha, esOtroMes }, index) => {
               const esHoy =
                 fecha.getDate() === hoy.getDate() &&
@@ -874,11 +952,17 @@ export default function Calendario({ session }) {
                   </button>
 
                   {/* Eventos del día (máximo 3 visibles, el resto con "+X más") */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1px",
+                    }}
+                  >
                     {eventosHoy.slice(0, 3).map((ev) => (
                       <div
                         key={ev.id}
-                        title={`${ev.titulo} - ${limpiarNombre(ev.materia_nombre || "")}${ev.creado_por ? " (creado por " + ev.creado_por + ")" : ""}`}
+                        title={`${ev.titulo} - ${limpiarNombre(ev.materia_nombre || "")}${ev.creado_por ? " (creado por " + obtenerNombre(ev.creado_por) + ")" : ""}`}
                         onClick={() => {
                           if (ev.es_oficial) return; // Los oficiales no son clickeables
                           setEventoEditando(ev);
@@ -886,12 +970,15 @@ export default function Calendario({ session }) {
                         }}
                         style={{
                           fontSize: "clamp(0.4rem, 1.8vw, 0.6rem)",
-                          padding: "clamp(2px, 0.5vw, 3px) clamp(2px, 0.5vw, 6px)",
+                          padding:
+                            "clamp(2px, 0.5vw, 3px) clamp(2px, 0.5vw, 6px)",
                           borderRadius: "3px",
                           background: ev.es_oficial
                             ? "var(--bg3)"
                             : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                          border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
+                          border: ev.es_oficial
+                            ? "1px dashed var(--accent)"
+                            : "none",
                           color: ev.es_oficial ? "var(--accent)" : "#000",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -1018,12 +1105,15 @@ export default function Calendario({ session }) {
                       }}
                       style={{
                         fontSize: "clamp(0.45rem, 1.8vw, 0.6rem)",
-                        padding: "clamp(2px, 0.4vw, 4px) clamp(3px, 0.6vw, 6px)",
+                        padding:
+                          "clamp(2px, 0.4vw, 4px) clamp(3px, 0.6vw, 6px)",
                         borderRadius: "4px",
                         background: ev.es_oficial
                           ? "var(--bg3)"
                           : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                        border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
+                        border: ev.es_oficial
+                          ? "1px dashed var(--accent)"
+                          : "none",
                         color: ev.es_oficial ? "var(--accent)" : "#000",
                         marginBottom: "2px",
                         cursor: ev.es_oficial ? "default" : "pointer",
@@ -1070,7 +1160,9 @@ export default function Calendario({ session }) {
         >
           Próximos eventos
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+        >
           {notificaciones.length === 0 && (
             <div
               style={{
@@ -1087,7 +1179,9 @@ export default function Calendario({ session }) {
             </div>
           )}
           {notificaciones.map((ev) => {
-            const materia = materias.find((m) => m.codigoMateria === ev.materia_id);
+            const materia = materias.find(
+              (m) => m.codigoMateria === ev.materia_id,
+            );
             return (
               <div
                 key={ev.id}
@@ -1154,7 +1248,8 @@ export default function Calendario({ session }) {
                       color: "var(--text-dim)",
                     }}
                   >
-                    {materia?.materia || limpiarNombre(ev.materia_nombre || "")} · {formatearFecha(ev.fecha)}
+                    {materia?.materia || limpiarNombre(ev.materia_nombre || "")}{" "}
+                    · {formatearFecha(ev.fecha)}
                   </div>
                 </div>
                 <div
@@ -1250,7 +1345,13 @@ export default function Calendario({ session }) {
                 ✕
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
               {eventosDelDia(diaSeleccionado).length === 0 ? (
                 <div
                   style={{
@@ -1278,7 +1379,9 @@ export default function Calendario({ session }) {
                       background: ev.es_oficial
                         ? "var(--bg3)"
                         : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                      border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
+                      border: ev.es_oficial
+                        ? "1px dashed var(--accent)"
+                        : "none",
                       cursor: ev.es_oficial ? "default" : "pointer",
                       color: ev.es_oficial ? "var(--accent)" : "#000",
                       fontFamily: "Space Mono, monospace",
@@ -1296,7 +1399,12 @@ export default function Calendario({ session }) {
                     </div>
                     <div style={{ fontSize: "0.7rem", opacity: 0.9 }}>
                       {limpiarNombre(ev.materia_nombre || "")}
-                      {ev.creado_por && <span> · Creado por: {ev.creado_por}</span>}
+                      {ev.creado_por && (
+                        <span>
+                          {" "}
+                          · Creado por: {obtenerNombre(ev.creado_por)}
+                        </span>
+                      )}
                       {ev.descripcion && ` · ${ev.descripcion}`}
                     </div>
                   </div>
@@ -1325,13 +1433,17 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
       ? new Date(evento.fecha).toISOString().slice(0, 10) // YYYY-MM-DD
       : new Date().toISOString().slice(0, 10),
   });
-  const [error, setError] = useState("");               // Error de validación
-  const [saving, setSaving] = useState(false);           // Para deshabilitar el botón mientras guarda
+  const [error, setError] = useState(""); // Error de validación
+  const [saving, setSaving] = useState(false); // Para deshabilitar el botón mientras guarda
   const [mostrarCalendario, setMostrarCalendario] = useState(false); // Toggle del mini calendario
 
   const fechaSeleccionada = new Date(form.fecha + "T00:00:00");
-  const [calendarioMes, setCalendarioMes] = useState(fechaSeleccionada.getMonth());
-  const [calendarioAnio, setCalendarioAnio] = useState(fechaSeleccionada.getFullYear());
+  const [calendarioMes, setCalendarioMes] = useState(
+    fechaSeleccionada.getMonth(),
+  );
+  const [calendarioAnio, setCalendarioAnio] = useState(
+    fechaSeleccionada.getFullYear(),
+  );
 
   // ─── Funciones del mini calendario ──────────────────────────────────────
   // Genera la cuadrícula de días para un mes y año dados
@@ -1349,8 +1461,13 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
   const cambiarMes = (delta) => {
     let nuevoMes = calendarioMes + delta;
     let nuevoAnio = calendarioAnio;
-    if (nuevoMes < 0) { nuevoMes = 11; nuevoAnio--; }
-    else if (nuevoMes > 11) { nuevoMes = 0; nuevoAnio++; }
+    if (nuevoMes < 0) {
+      nuevoMes = 11;
+      nuevoAnio--;
+    } else if (nuevoMes > 11) {
+      nuevoMes = 0;
+      nuevoAnio++;
+    }
     setCalendarioMes(nuevoMes);
     setCalendarioAnio(nuevoAnio);
   };
@@ -1374,9 +1491,18 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
     e.preventDefault();
     setError("");
 
-    if (!form.titulo.trim()) { setError("El título es obligatorio"); return; }
-    if (!form.materiaId) { setError("Debe seleccionar una materia"); return; }
-    if (!form.fecha) { setError("Debe seleccionar una fecha"); return; }
+    if (!form.titulo.trim()) {
+      setError("El título es obligatorio");
+      return;
+    }
+    if (!form.materiaId) {
+      setError("Debe seleccionar una materia");
+      return;
+    }
+    if (!form.fecha) {
+      setError("Debe seleccionar una fecha");
+      return;
+    }
 
     // No permitir fechas pasadas
     const fechaSel = new Date(form.fecha + "T00:00:00");
@@ -1430,12 +1556,17 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
   const dias = obtenerDiasCalendario(calendarioMes, calendarioAnio);
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="modal-contenido">
         {/* Encabezado del modal */}
         <div className="modal-header">
           <h3>{evento ? "Editar Evento" : "Nuevo Evento"}</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -1456,7 +1587,9 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
             <label>Descripción</label>
             <textarea
               value={form.descripcion}
-              onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, descripcion: e.target.value })
+              }
               placeholder="Temas, aula, detalles..."
               rows={3}
             />
@@ -1516,9 +1649,15 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
               {mostrarCalendario && (
                 <div className="mini-calendario">
                   <div className="mini-cal-nav">
-                    <button type="button" onClick={() => cambiarMes(-1)}>←</button>
-                    <span>{MESES_CAL[calendarioMes]} {calendarioAnio}</span>
-                    <button type="button" onClick={() => cambiarMes(1)}>→</button>
+                    <button type="button" onClick={() => cambiarMes(-1)}>
+                      ←
+                    </button>
+                    <span>
+                      {MESES_CAL[calendarioMes]} {calendarioAnio}
+                    </span>
+                    <button type="button" onClick={() => cambiarMes(1)}>
+                      →
+                    </button>
                   </div>
                   <div className="mini-cal-dias">
                     {DIAS_SEMANA_CAL.map((dia, i) => (
