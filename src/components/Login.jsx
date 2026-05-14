@@ -15,11 +15,22 @@ export default function Login({ onLogin }) {
       const data = await apiFetch("/auth/login", {
         method: "POST",
         body: { email, password: pass },
+		skipAuthRedirect: true //configuracion para evitar la redireccion automatica, quieremos recibir el codigo http antes de que vuelva a cargar
       });
       storage.set("session", data);
       onLogin(data);
+
+	
     } catch (err) {
-      setError(err.message || "Error al iniciar sesion");
+		if(err.status === 401) {
+			setError("Ejavy la nde contraseña o la nde correo");
+		}
+		else if(err.message){
+			setError(err.message);//verificar algun error especifico
+		}
+		else {
+			setError("Error al iniciar sesión. Verifica tus credenciales")
+		}
     } finally {
       setLoading(false);
     }
