@@ -24,8 +24,9 @@ export async function apiFetch(path, { method = "GET", body, token } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  //si se recibe 401 (expiro el token) se borra la sesion del local storage
-  if (res.status === 401) {
+  const manejarError401 = !path.includes("/login"); //manejamos el error 401 solo si no es una peticion al login
+
+  if (res.status === 401 && manejarError401) {
     storage.del("session");
     window.location.reload();
     throw new Error("Sesión expirada");
@@ -33,7 +34,11 @@ export async function apiFetch(path, { method = "GET", body, token } = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || `HTTP ${res.status}`);
+    //obtenemos el mensaje y el status desde el backend
+    const errorMessage = err.detail || err.message || `Error ${res.status}`;
+    const error = new Error(errorMessage);
+    error.status = res.status;
+    throw error;
   }
 
   return res.json();
