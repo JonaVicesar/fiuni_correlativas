@@ -14,21 +14,21 @@
   --border2: #cbd5e0;
   --text: #1a202c;
   --text-dim: #718096;
-  --accent: #e53e3e;
-  --accent-hover: #c53030;
-  --accent2: #c53030;
+  --accent: #ff1100;
+  --accent-hover: #cc0e00;
+  --accent2: #e53e3e;
   --aprobada: #38a169;
   --cursando: #3182ce;
   --disponible: #d69e2e;
   --bloqueada: #fff5f5;
-  --bloqueada-t: #e53e3e;
+  --bloqueada-t: #ff1100;
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
   /* color suave del acento para fondos */
-  --accent-light: rgba(229, 62, 62, 0.1);
+  --accent-light: rgba(255, 17, 0, 0.1);
   /* sombra para campos de texto al hacer foco */
-  --accent-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
+  --accent-shadow: 0 0 0 3px rgba(255, 17, 0, 0.2);
 }
 
 /* tema dark  */
