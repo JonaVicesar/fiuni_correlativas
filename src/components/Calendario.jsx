@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { limpiarNombre } from "../utils/limpiarNombre";
 import { parseJwt } from "../api";
+import "../styles/calendario.css";
 
 // El backend de la FIUNI agrega un "*" a las materias que son correlativas.
 // Esta función los elimina para que la interfaz se vea más limpia.
@@ -114,7 +115,7 @@ function generarCalendarioICS(eventos) {
   const header = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//FIUNI//Agenda Academica//ES",
+    "PRODID:-//FIUNI//Calendario Academico//ES",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ].join("\n");
@@ -180,8 +181,6 @@ export default function Calendario({ session }) {
   const [filtroMateria, setFiltroMateria] = useState("todas"); // Filtro por materia
   const [filtroTipo, setFiltroTipo] = useState("todos"); // Filtro por tipo de evento
 
-  const [notificaciones, setNotificaciones] = useState([]); // Próximos eventos (3 días)
-  const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false); // Dropdown de notificaciones
   const [diaSeleccionado, setDiaSeleccionado] = useState(null); // Día seleccionado para el popover
 
   // ─── CARGA INICIAL DE MATERIAS Y EVENTOS (UN SOLO EFECTO) ──────────────
@@ -291,37 +290,6 @@ export default function Calendario({ session }) {
     };
     cargarOficiales();
   }, [session.carreraId]);
-
-  // ─── NOTIFICACIONES ─────────────────────────────────────────────────────
-  // Cada vez que cambian los eventos (de estudiantes u oficiales), recalcula
-  // cuáles están en los próximos 3 días para mostrarlos en la campana.
-  useEffect(() => {
-    const ahora = new Date();
-    const limite = new Date(ahora);
-    limite.setDate(limite.getDate() + 3); // Ventana de 3 días
-
-    // Unificar eventos normales y oficiales para el cálculo
-    const todosLosEventos = [
-      ...eventos.map((e) => ({ ...e, es_oficial: false })),
-      ...eventosOficiales.map((e) => ({
-        ...e,
-        es_oficial: true,
-        materia_id: null,
-        materia_nombre: "Institucional",
-        tipo: e.tipo || "feriado",
-        fecha: new Date(e.fecha + "T00:00:00").toISOString(),
-      })),
-    ];
-
-    const proximos = todosLosEventos
-      .filter((e) => {
-        const f = new Date(e.fecha);
-        return f >= ahora && f <= limite;
-      })
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Más próximos primero
-
-    setNotificaciones(proximos);
-  }, [eventos, eventosOficiales]);
 
   // ─── NAVEGACIÓN DEL CALENDARIO ──────────────────────────────────────────
   // Funciones para cambiar el mes/semana visible y volver a "hoy".
@@ -604,7 +572,7 @@ export default function Calendario({ session }) {
           </button>
         </div>
 
-        {/* Acciones: campana de notificaciones, toggle vista, exportar, nuevo evento */}
+        {/* Acciones: toggle vista, exportar, nuevo evento */}
         <div
           style={{
             display: "flex",
@@ -613,109 +581,6 @@ export default function Calendario({ session }) {
             flexWrap: "wrap",
           }}
         >
-          {/* Campana de notificaciones (solo visible si hay próximos eventos) */}
-          {notificaciones.length > 0 && (
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
-                style={{
-                  padding: "0.5rem",
-                  borderRadius: "50%",
-                  border: "1px solid var(--border2)",
-                  background: "transparent",
-                  color: "var(--accent)",
-                  cursor: "pointer",
-                  fontSize: "1.2rem",
-                  position: "relative",
-                }}
-              >
-                🔔
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    background: "var(--bloqueada-t)",
-                    color: "#fff",
-                    borderRadius: "50%",
-                    width: "18px",
-                    height: "18px",
-                    fontSize: "0.6rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {notificaciones.length}
-                </span>
-              </button>
-              {/* Dropdown con la lista de próximos eventos */}
-              {mostrarNotificaciones && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "8px",
-                    background: "var(--bg3)",
-                    border: "1px solid var(--border2)",
-                    borderRadius: "12px",
-                    padding: "0.75rem",
-                    minWidth: "280px",
-                    maxWidth: "90vw",
-                    maxHeight: "300px",
-                    overflowY: "auto",
-                    zIndex: 300,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "var(--accent)",
-                      marginBottom: "0.5rem",
-                      fontFamily: "Space Mono, monospace",
-                      fontWeight: "600",
-                    }}
-                  >
-                    PRÓXIMOS EVENTOS
-                  </div>
-                  {notificaciones.map((ev) => (
-                    <div
-                      key={ev.id}
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid var(--border)",
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontWeight: "600",
-                          color: ev.es_oficial
-                            ? "var(--accent)"
-                            : COLORES_TIPO[ev.tipo],
-                        }}
-                      >
-                        {ICONOS_TIPO[ev.tipo] || "📅"} {ev.titulo}
-                      </div>
-                      <div
-                        style={{
-                          color: "var(--text-dim)",
-                          fontSize: "0.65rem",
-                        }}
-                      >
-                        {limpiarNombre(ev.materia_nombre || "")} ·{" "}
-                        {formatearFecha(ev.fecha)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Toggle vista mensual / semanal */}
           <div
             style={{
@@ -1146,134 +1011,6 @@ export default function Calendario({ session }) {
         </div>
       )}
 
-      {/* ─── LISTA DE PRÓXIMOS EVENTOS ──────────────────────────────────── */}
-      <div style={{ marginTop: "2rem" }}>
-        <div
-          style={{
-            fontSize: "0.7rem",
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-            color: "var(--accent)",
-            marginBottom: "1rem",
-            fontFamily: "Space Mono, monospace",
-          }}
-        >
-          Próximos eventos
-        </div>
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
-          {notificaciones.length === 0 && (
-            <div
-              style={{
-                padding: "1rem",
-                color: "var(--text-dim)",
-                fontSize: "0.8rem",
-                fontFamily: "Space Mono, monospace",
-                textAlign: "center",
-                background: "var(--bg3)",
-                borderRadius: "8px",
-              }}
-            >
-              No hay eventos próximos en los siguientes 3 días
-            </div>
-          )}
-          {notificaciones.map((ev) => {
-            const materia = materias.find(
-              (m) => m.codigoMateria === ev.materia_id,
-            );
-            return (
-              <div
-                key={ev.id}
-                onClick={() => {
-                  if (ev.es_oficial) return;
-                  setEventoEditando(ev);
-                  setMostrarModal(true);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "clamp(0.5rem, 2vw, 1rem)",
-                  padding: "clamp(0.5rem, 2vw, 0.75rem)",
-                  background: "var(--bg3)",
-                  border: ev.es_oficial
-                    ? "1px dashed var(--accent)"
-                    : "1px solid var(--border)",
-                  borderRadius: "8px",
-                  cursor: ev.es_oficial ? "default" : "pointer",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!ev.es_oficial)
-                    e.currentTarget.style.borderColor =
-                      COLORES_TIPO[ev.tipo] || "var(--accent)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!ev.es_oficial)
-                    e.currentTarget.style.borderColor = "var(--border)";
-                }}
-              >
-                <div
-                  style={{
-                    width: "clamp(32px, 8vw, 40px)",
-                    height: "clamp(32px, 8vw, 40px)",
-                    borderRadius: "8px",
-                    background: ev.es_oficial
-                      ? "var(--bg3)"
-                      : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                    border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "clamp(1rem, 3vw, 1.2rem)",
-                  }}
-                >
-                  {ICONOS_TIPO[ev.tipo] || "📅"}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontWeight: "600",
-                      fontSize: "clamp(0.75rem, 2.5vw, 0.85rem)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {ev.titulo}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "clamp(0.65rem, 2vw, 0.7rem)",
-                      color: "var(--text-dim)",
-                    }}
-                  >
-                    {materia?.materia || limpiarNombre(ev.materia_nombre || "")}{" "}
-                    · {formatearFecha(ev.fecha)}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: "clamp(0.5rem, 1.8vw, 0.6rem)",
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "20px",
-                    background: ev.es_oficial
-                      ? "var(--bg3)"
-                      : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                    border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
-                    color: ev.es_oficial ? "var(--accent)" : "#000",
-                    fontFamily: "Space Mono, monospace",
-                    fontWeight: "600",
-                  }}
-                >
-                  {ev.tipo.toUpperCase()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ─── MODAL DE CREAR/EDITAR EVENTO ────────────────────────────────── */}
       {mostrarModal && (
         <ModalEvento
@@ -1628,7 +1365,7 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
 
           {/* Fecha con mini calendario desplegable hacia arriba */}
           <div className="field">
-            <label>Fecha del examen</label>
+            <label>Fecha del evento</label>
             <div className="fecha-selector">
               <button
                 type="button"

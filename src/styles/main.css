@@ -6,7 +6,7 @@
 
 /* variables para los temas */
 :root {
-  /* por defecto ligth */
+  /* por defecto light */
   --bg: #ffffff;
   --bg2: #f7fafc;
   --bg3: #ffffff;
@@ -14,14 +14,14 @@
   --border2: #cbd5e0;
   --text: #1a202c;
   --text-dim: #718096;
-  --accent: #e53e3e;
-  --accent-hover: #c53030;
-  --accent2: #c53030;
+  --accent: #DC143C;            
+  --accent-hover: #B01030;      
+  --accent2: #B01030;
   --aprobada: #38a169;
   --cursando: #3182ce;
   --disponible: #d69e2e;
   --bloqueada: #fff5f5;
-  --bloqueada-t: #e53e3e;
+  --bloqueada-t: #DC143C;       
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -36,9 +36,9 @@
   --border2: #444444;
   --text: #ffffff;
   --text-dim: #a0aec0;
-  --accent: #ff1100;
-  --accent-hover: #ffed4a;
-  --accent2: #f0c000;
+  --accent: #DC143C;            
+  --accent-hover: #B01030;
+  --accent2: #B01030;
   --aprobada: #48bb78;
   --cursando: #4299e1;
   --disponible: #ecc94b;
@@ -129,11 +129,7 @@ body {
 
 .field input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-}
-
-[data-theme="dark"] .field input:focus {
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.2);
 }
 
 .btn-primary {
@@ -223,11 +219,12 @@ body {
   gap: 1rem;
 }
 
+/* nombre de usuario visible completamente en pantallas grandes */
 .header-nombre {
   font-size: 0.75rem;
   color: var(--text-dim);
   font-family: "Space Mono", monospace;
-  max-width: 120px;
+  max-width: none;               
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -269,12 +266,12 @@ body {
 
 .theme-toggle:hover {
   border-color: var(--accent);
-  background: rgba(229, 62, 62, 0.1);
+  background: rgba(220, 20, 60, 0.1);
   transform: rotate(15deg);
 }
 
 [data-theme="dark"] .theme-toggle:hover {
-  background: rgba(255, 215, 0, 0.1);
+  background: rgba(220, 20, 60, 0.15);
 }
 
 /* Main */
@@ -387,15 +384,15 @@ body {
   background: var(--bg2);
 }
 
-.nodo-aprobada { border-color: var(--aprobada); color: var(--aprobada); }
-.nodo-cursando { border-color: var(--cursando); color: var(--cursando); }
-.nodo-disponible { border-color: var(--disponible); color: var(--disponible); }
+.nodo-aprobada  { border-color: var(--aprobada);   color: var(--aprobada); }
+.nodo-cursando  { border-color: var(--cursando);   color: var(--cursando); }
+.nodo-disponible{ border-color: var(--disponible); color: var(--disponible); }
 .nodo-bloqueada { border-color: var(--bloqueada-t); color: var(--bloqueada-t); opacity: 0.7; }
 
-.badge-aprobada { background: var(--aprobada); color: white; }
-.badge-cursando { background: var(--cursando); color: white; }
-.badge-disponible { background: var(--disponible); color: #000; }
-.badge-bloqueada { background: var(--bloqueada); color: var(--bloqueada-t); }
+.badge-aprobada  { background: var(--aprobada);   color: white; }
+.badge-cursando  { background: var(--cursando);   color: white; }
+.badge-disponible{ background: var(--disponible); color: #000; }
+.badge-bloqueada { background: var(--bloqueada);  color: var(--bloqueada-t); }
 
 /* Botones */
 .btn-mapa {
@@ -414,12 +411,12 @@ body {
 
 .btn-mapa:hover {
   border-color: var(--accent);
-  background: rgba(229, 62, 62, 0.1);
+  background: rgba(220, 20, 60, 0.1);
   color: var(--accent);
 }
 
 [data-theme="dark"] .btn-mapa:hover {
-  background: rgba(255, 215, 0, 0.1);
+  background: rgba(220, 20, 60, 0.15);
 }
 
 /* Cards en dashboard */
@@ -497,12 +494,9 @@ body {
   font-size: 2rem;
 }
 
-/* nombre de usuario no rompe el header */
+/* nombre de usuario truncado solo en pantallas pequeñas */
 .header-nombre {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: none;   /* visible completamente */
 }
 
 /* pantallas ≤ 768px */
@@ -513,7 +507,10 @@ body {
   }
   .header-logo { font-size: 0.9rem; }
 
-  .header-nombre { max-width: 90px; }
+  .header-nombre {
+    max-width: 200px;   
+    font-size: 0.7rem;
+  }
 
   .main { padding: 1rem; }
 
@@ -562,7 +559,9 @@ body {
   }
 
   /* ocultar el nombre de usuario en pantallas mas pequenhas */
-  .header-nombre { display: none; }
+  .header-nombre {
+    display: none;
+  }
 
   .main { padding: 0.85rem; }
 

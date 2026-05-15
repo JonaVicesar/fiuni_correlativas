@@ -3,7 +3,7 @@ import { storage } from "./api";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
-import Agenda from "./components/Calendario";
+import Calendario from "./components/Calendario";
 import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
           {[
             ["dashboard", "Mis Materias"],
             ["mapa", "Mapa"],
-            ["agenda", "Agenda"],
+            ["calendario", "Calendario"],
           ].map(([v, label]) => (
             <button
               key={v}
@@ -64,8 +64,8 @@ export default function App() {
 
       {vista === "dashboard" ? (
         <Dashboard session={session} />
-      ) : vista === "agenda" ? (
-        <Agenda session={session} />
+      ) : vista === "calendario" ? (
+        <Calendario session={session} />
       ) : (
         <Mapa session={session} />
       )}
