@@ -35,13 +35,20 @@
   --border: #333333;
   --border2: #444444;
   --text: #ffffff;
+<<<<<<< HEAD
   --text-dim: #cbd5e0;
   --accent: #DC143C;            
   --accent-hover: #B01030;
   --accent2: #B01030;
+=======
+  --text-dim: #a0aec0;
+  --accent: #c53030;
+  --accent-hover:  #e53e3e;
+  --accent2: #e53e3e;
+>>>>>>> 96c5fea37d1042da2f8576dbf465950fac34be98
   --aprobada: #48bb78;
   --cursando: #4299e1;
-  --disponible: #ecc94b;
+  --disponible: #ff6b6b;
   --bloqueada: #2d1a1a;
   --bloqueada-t: #DC143C;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
