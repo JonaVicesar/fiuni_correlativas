@@ -35,40 +35,30 @@ export default function App() {
             <button
               key={v}
               onClick={() => setVista(v)}
-              style={{
-                background: vista === v ? "var(--accent)" : "transparent",
-                color: vista === v ? "#000" : "var(--text-dim)",
-                padding: ".4rem .9rem",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Syne, sans-serif",
-                fontSize: ".85rem",
-                fontWeight: "600",
-                transition: "all .2s",
-              }}
+              className={`nav-btn ${vista === v ? "active" : "inactive"}`}
             >
               {label}
             </button>
           ))}
         </nav>
-
         <div className="header-user">
+          <span className="header-nombre">{session?.nombre || "Usuario"}</span>
           <ToggleTema />
-          <span className="header-nombre"> {session.nombre}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Salir
           </button>
         </div>
       </header>
 
-      {vista === "dashboard" ? (
-        <Dashboard session={session} />
-      ) : vista === "calendario" ? (
-        <Calendario session={session} />
-      ) : (
-        <Mapa session={session} />
-      )}
+      <div className="vista-container" key={vista}>
+        {vista === "dashboard" ? (
+          <Dashboard session={session} />
+        ) : vista === "calendario" ? (
+          <Calendario session={session} />
+        ) : (
+          <Mapa session={session} />
+        )}
+      </div>
     </>
   );
 }

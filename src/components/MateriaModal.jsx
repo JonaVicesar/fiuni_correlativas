@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 //Constantes de notas, falta verificar
 const NOTAS = [
@@ -124,7 +125,9 @@ export default function MateriaModal({
 
   if (!materia) return null;
 
-  const { nombre, id, semestre, creditos, estado } = materia;
+  const { nombre: nombreRaw, id, semestre: semestreRaw, creditos, estado } = materia;
+  const nombre = limpiarNombre(nombreRaw);
+  const semestre = limpiarNombre(semestreRaw?.toString().replace('º', '')) ?? semestreRaw;
 
   // busca el registro de la materia clickeada, el pp y asistencia
   const registro = (historialMaterias || []).find((h) => {
@@ -215,31 +218,10 @@ export default function MateriaModal({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.85)",
-        zIndex: 400,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
+      className="modal-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div
-        style={{
-          background: "var(--bg3)",
-          border: "1px solid var(--border2)",
-          borderRadius: "16px",
-          width: "100%",
-          maxWidth: "520px",
-          maxHeight: "85vh",
-          overflowY: "auto",
-          padding: "1.75rem",
-          position: "relative",
-        }}
-      >
+      <div className="modal-content">
         {/* boton cerrar */}
         <button
           onClick={onClose}

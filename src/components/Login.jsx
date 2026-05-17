@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiFetch, storage } from "../api";
+import ToggleTema from "./ToggleTema";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ export default function Login({ onLogin }) {
 	
     } catch (err) {
 		if(err.status === 401) {
-			setError("Ejavy la nde contraseña o la nde correo");
+			setError("Email o contraseña incorrectos");
 		}
 		else if(err.message){
 			setError(err.message);//verificar algun error especifico
@@ -38,6 +39,15 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-wrap">
+      <div
+        style={{
+          position: "absolute",
+          top: "2rem",
+          right: "2rem",
+        }}
+      >
+        <ToggleTema />
+      </div>
       <div className="login-card">
         <div className="login-logo">FIUNI Correlativas</div>
         <form onSubmit={handleLogin}>

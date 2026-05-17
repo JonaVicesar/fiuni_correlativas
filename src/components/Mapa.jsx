@@ -8,7 +8,7 @@
  * @param {Object} session - { token, nombre, carreraId }
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
 import Spinner from "./Spinner";
@@ -39,30 +39,40 @@ export default function Mapa({ session }) {
       .catch(() => setHistorialMaterias([]));
   }, [session.token]);
 
-  // organiza las materias por semestre
-  const porSemestre = mapa
-    ? mapa.materias.reduce((auxiliar, materia) => {
-        if (!auxiliar[materia.semestre]) auxiliar[materia.semestre] = [];
-        auxiliar[materia.semestre].push(materia);
-        return auxiliar;
-      }, {})
-    : {};
+  // Memoizar la organización por semestre
+  const porSemestre = useMemo(
+    () =>
+      mapa
+        ? mapa.materias.reduce((auxiliar, materia) => {
+            if (!auxiliar[materia.semestre]) auxiliar[materia.semestre] = [];
+            auxiliar[materia.semestre].push(materia);
+            return auxiliar;
+          }, {})
+        : {},
+    [mapa],
+  );
 
-  // estadisticas para el hero
-  const stats = mapa
-    ? {
-        total: mapa.materias.length,
-        aprobadas: mapa.materias.filter((m) => m.estado === "aprobada").length,
-        cursando: mapa.materias.filter((m) => m.estado === "cursando").length,
-        disponibles: mapa.materias.filter((m) => m.estado === "disponible")
-          .length,
-      }
-    : null;
+  // Memoizar estadísticas
+  const stats = useMemo(
+    () =>
+      mapa
+        ? {
+            total: mapa.materias.length,
+            aprobadas: mapa.materias.filter((m) => m.estado === "aprobada")
+              .length,
+            cursando: mapa.materias.filter((m) => m.estado === "cursando")
+              .length,
+            disponibles: mapa.materias.filter((m) => m.estado === "disponible")
+              .length,
+          }
+        : null,
+    [mapa],
+  );
 
-  //abre el modal
-  const handleClickNodo = (materia) => {
+  // Memoizar callback para evitar crear nueva función en cada render
+  const handleClickNodo = useCallback((materia) => {
     setModalMateria(materia);
-  };
+  }, []);
 
   if (loading) return <Spinner texto="Calculando tu mapa..." />;
   if (error)

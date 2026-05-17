@@ -1,17 +1,3 @@
-/* materias siempre en fila nunca columna sola */
-.materias-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  align-items: flex-start;
-}
-
-.nodo {
-  flex: 1 1 140px;
-  max-width: 220px;
-  min-width: 130px;
-}
-
 /* login logo en una sola linea */
 .login-logo {
   white-space: nowrap;
@@ -42,6 +28,10 @@
   .nodo {
     flex: 1 1 120px;
     max-width: 48%;
+  }
+
+  .nodo:hover {
+    transform: translateY(-2px) scale(1.01);
   }
 
   .panel-overlay { align-items: flex-end; }
@@ -95,6 +85,11 @@
     min-width: 0;
     padding: 0.6rem 0.7rem;
   }
+
+  .nodo:hover {
+    transform: translateY(-1px) scale(1);
+  }
+
   .nodo-nombre { font-size: 0.75rem; }
   .nodo-badge  { font-size: 0.52rem; padding: 1px 5px; top: -7px; }
 

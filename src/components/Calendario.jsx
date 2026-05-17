@@ -533,6 +533,7 @@ export default function Calendario({ session }) {
           <button
             onClick={vista === "mensual" ? irMesAnterior : irSemanaAnterior}
             className="btn-logout"
+            aria-label={vista === "mensual" ? "Mes anterior" : "Semana anterior"}
           >
             ←
           </button>
@@ -551,6 +552,7 @@ export default function Calendario({ session }) {
           <button
             onClick={vista === "mensual" ? irMesSiguiente : irSemanaSiguiente}
             className="btn-logout"
+            aria-label={vista === "mensual" ? "Mes siguiente" : "Semana siguiente"}
           >
             →
           </button>

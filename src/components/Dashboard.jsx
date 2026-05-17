@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
-import Spinner from "./Spinner";
+import SkeletonLoader from "./SkeletonLoader";
 import MateriaModal from "./MateriaModal";
 import Libreta from "./Libreta";
+import { limpiarNombre } from "../utils/limpiarNombre";
 
 function colorAsistencia(porcentaje) {
   if (porcentaje >= 75) return "var(--aprobada)";
@@ -52,7 +53,12 @@ export default function Dashboard({ session }) {
       .catch(() => setMapaMaterias([]));
   }, [session.token, session.carreraId]);
 
-  if (loading) return <Spinner texto="Cargando tus materias..." />;
+  if (loading)
+    return (
+      <div className="main">
+        <SkeletonLoader />
+      </div>
+    );
   if (error)
     return (
       <div className="error-msg" style={{ padding: "2rem" }}>
@@ -155,7 +161,7 @@ export default function Dashboard({ session }) {
               >
                 <div>
                   <div style={{ fontWeight: "700", fontSize: ".95rem" }}>
-                    {m.materia}
+                    {limpiarNombre(m.materia)}
                   </div>
                   <div
                     style={{
@@ -164,7 +170,7 @@ export default function Dashboard({ session }) {
                       color: "var(--text-dim)",
                     }}
                   >
-                    Cód. {m.codigoMateria} · {m.semestre}° Semestre
+                    Cód. {m.codigoMateria} · {m.semestre} Semestre
                   </div>
                 </div>
 
