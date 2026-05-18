@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useFetch } from "../hooks/useFetch";
+import { logger } from "../utils/logger";
 import SkeletonLoader from "./SkeletonLoader";
 import MateriaModal from "./MateriaModal";
 import Libreta from "./Libreta";
@@ -41,6 +42,14 @@ export default function Dashboard({ session }) {
 
   const [modalMateria, setModalMateria] = useState(null);
   const [mostrarLibreta, setMostrarLibreta] = useState(false);
+
+  // Debug: loguear materias recibidas
+  useEffect(() => {
+    if (materiasRaw && materiasRaw.length > 0) {
+      logger.debug("Materias recibidas del servidor", materiasRaw);
+      logger.log("Materias de este año:", materias);
+    }
+  }, [materiasRaw, materias]);
 
   if (materiasLoading)
     return (
