@@ -373,15 +373,17 @@ export default function Libreta({ session }) {
                       const notaColor =
                         materia.nota === null || materia.nota === undefined
                           ? "var(--text-dim)"
-                          : materia.nota === 5
-                            ? "var(--nota-5)"
-                            : materia.nota === 4
-                              ? "var(--nota-4)"
-                              : materia.nota === 3
-                                ? "var(--nota-3)"
-                                : materia.nota === 2
-                                  ? "var(--nota-2)"
-                                  : "var(--bloqueada-t)";
+                          : materia.nota === 0
+                            ? "var(--text-dim)"
+                            : materia.nota === 5
+                              ? "var(--nota-5)"
+                              : materia.nota === 4
+                                ? "var(--nota-4)"
+                                : materia.nota === 3
+                                  ? "var(--nota-3)"
+                                  : materia.nota === 2
+                                    ? "var(--nota-2)"
+                                    : "var(--bloqueada-t)";
                       return (
                         <tr
                           key={`${materia.codigo}-${idx}`}
@@ -407,9 +409,11 @@ export default function Libreta({ session }) {
                               color: notaColor,
                             }}
                           >
-                            {materia.nota !== null && materia.nota !== undefined
-                              ? materia.nota
-                              : "-"}
+                            {materia.nota === 0
+                              ? "Ausente"
+                              : materia.nota !== null && materia.nota !== undefined
+                                ? materia.nota
+                                : "-"}
                           </td>
                           <td
                             style={{
