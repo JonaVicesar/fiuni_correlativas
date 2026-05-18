@@ -21,7 +21,11 @@
   --cursando: #3182ce;
   --disponible: #d69e2e;
   --bloqueada: #fff5f5;
-  --bloqueada-t: #DC143C;       
+  --bloqueada-t: #DC143C;
+  --nota-2: #eab308;
+  --nota-3: #f97316;
+  --nota-4: #a855f7;
+  --nota-5: #15803d;       
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -44,6 +48,10 @@
   --disponible: #d69e2e;
   --bloqueada: #2d1a1a;
   --bloqueada-t: #DC143C;
+  --nota-2: #eab308;
+  --nota-3: #f97316;
+  --nota-4: #a855f7;
+  --nota-5: #15803d;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.6);
 }

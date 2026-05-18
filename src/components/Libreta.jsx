@@ -373,11 +373,15 @@ export default function Libreta({ session }) {
                       const notaColor =
                         materia.nota === null || materia.nota === undefined
                           ? "var(--text-dim)"
-                          : materia.nota >= 4
-                            ? "var(--aprobada)"
-                            : materia.nota >= 2
-                              ? "var(--disponible)"
-                              : "var(--bloqueada-t)";
+                          : materia.nota === 5
+                            ? "var(--nota-5)"
+                            : materia.nota === 4
+                              ? "var(--nota-4)"
+                              : materia.nota === 3
+                                ? "var(--nota-3)"
+                                : materia.nota === 2
+                                  ? "var(--nota-2)"
+                                  : "var(--bloqueada-t)";
                       return (
                         <tr
                           key={`${materia.codigo}-${idx}`}
