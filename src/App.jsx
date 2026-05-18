@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { storage } from "./api";
+import { useState } from "react";
+import { useAuth } from "./context/AuthContext";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
@@ -7,18 +7,10 @@ import Calendario from "./components/Calendario";
 import ToggleTema from "./components/ToggleTema";
 
 export default function App() {
-  const [session, setSession] = useState(() => storage.get("session"));
+  const { session, login, logout } = useAuth();
   const [vista, setVista] = useState("dashboard");
 
-  function handleLogin(data) {
-    setSession(data);
-  }
-  function handleLogout() {
-    storage.del("session");
-    setSession(null);
-  }
-
-  if (!session) return <Login onLogin={handleLogin} />;
+  if (!session) return <Login onLogin={login} />;
 
   return (
     <>
@@ -44,7 +36,7 @@ export default function App() {
         <div className="header-user">
           <span className="header-nombre">{session?.nombre || "Usuario"}</span>
           <ToggleTema />
-          <button className="btn-logout" onClick={handleLogout}>
+          <button className="btn-logout" onClick={logout}>
             Salir
           </button>
         </div>

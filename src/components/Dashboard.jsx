@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { apiFetch } from "../api";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useFetch } from "../hooks/useFetch";
 import SkeletonLoader from "./SkeletonLoader";
 import MateriaModal from "./MateriaModal";
 import Libreta from "./Libreta";
@@ -18,51 +19,39 @@ function colorPP(porcentaje) {
 }
 
 export default function Dashboard({ session }) {
-  const [materias, setMaterias] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { session: authSession } = useAuth();
+  const currentSession = session || authSession;
+
+  const mapaQuery = currentSession?.carreraId
+    ? `/mapa?carrera_id=${currentSession.carreraId}`
+    : null;
+
+  const { data: materiasRaw, loading: materiasLoading, error: materiasError } =
+    useFetch("/materias", currentSession?.token);
+  const { data: historialMaterias } = useFetch(
+    "/mis-materias",
+    currentSession?.token,
+  );
+  const { data: mapaRaw } = useFetch(mapaQuery, currentSession?.token);
+
+  const materias = (materiasRaw || []).filter(
+    (m) => m.anho === new Date().getFullYear(),
+  );
+  const mapaMaterias = mapaRaw?.materias || [];
+
   const [modalMateria, setModalMateria] = useState(null);
-  const [historialMaterias, setHistorialMaterias] = useState(null);
-  const [mapaMaterias, setMapaMaterias] = useState(null);
-  const [mostrarLibreta, setMostrarLibreta] = useState(false); // Estado para toggle
+  const [mostrarLibreta, setMostrarLibreta] = useState(false);
 
-  // carga las materias actuales
-  useEffect(() => {
-    apiFetch("/materias", { token: session.token })
-      .then((data) =>
-        setMaterias(data.filter((m) => m.anho === new Date().getFullYear())),
-      )
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [session.token]);
-
-  // carga todas las materias de todo el tiempo
-  useEffect(() => {
-    if (!session?.token) return;
-    apiFetch("/mis-materias", { token: session.token })
-      .then(setHistorialMaterias)
-      .catch(() => setHistorialMaterias([]));
-  }, [session.token]);
-
-  // carga el mapa de correlativas
-  useEffect(() => {
-    if (!session?.token) return;
-    const query = session.carreraId ? `?carrera_id=${session.carreraId}` : "";
-    apiFetch(`/mapa${query}`, { token: session.token })
-      .then((data) => setMapaMaterias(data?.materias || []))
-      .catch(() => setMapaMaterias([]));
-  }, [session.token, session.carreraId]);
-
-  if (loading)
+  if (materiasLoading)
     return (
       <div className="main">
         <SkeletonLoader />
       </div>
     );
-  if (error)
+  if (materiasError)
     return (
       <div className="error-msg" style={{ padding: "2rem" }}>
-        ⚠ {error}
+        ⚠ {materiasError}
       </div>
     );
 
@@ -89,7 +78,7 @@ export default function Dashboard({ session }) {
                 marginBottom: ".5rem",
               }}
             >
-              {session.carrera || "Informática"} · {new Date().getFullYear()}
+              {currentSession.carrera || "Informática"} · {new Date().getFullYear()}
             </div>
             <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>
               {mostrarLibreta ? "Libreta de notas" : "Mis materias"}
