@@ -36,17 +36,17 @@
   --border2: #444444;
   --text: #ffffff;
   --text-dim: #a0aec0;
-  --accent: #c53030;
-  --accent-hover:  #e53e3e;
-  --accent2: #e53e3e;
+  --accent: #ff1100;
+  --accent-hover: #ffed4a;
+  --accent2: #f0c000;
   --aprobada: #48bb78;
   --cursando: #4299e1;
-  --disponible: #ff6b6b;
+  --disponible: #ecc94b;  
   --bloqueada: #2d1a1a;
   --bloqueada-t: #ff6b6b;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.4);
-}
+} 
 
 body {
   background: var(--bg);
@@ -58,6 +58,8 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Mono:wght@400;700&display=swap');
 
 /* Login */
 .login-wrap {
@@ -74,19 +76,29 @@ body {
   max-width: 420px;
   background: var(--bg3);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 3rem 2.5rem;
+  border-radius: 18px;
+  padding: 3rem 2.5rem 2.5rem;
   box-shadow: var(--shadow-lg);
   animation: fadeUp 0.5s ease;
 }
 
+.login-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-bottom: 1.5rem;
+}
+
 .login-logo {
-  font-size: 1rem;
-  font-weight: 500;
-  font-family: "Space Mono", monospace;
-  letter-spacing: -4px;
+  font-family: "Fraunces", serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   color: var(--text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .login-logo span {
@@ -95,22 +107,46 @@ body {
 
 .login-sub {
   color: var(--text-dim);
-  font-size: 0.8rem;
-  margin-bottom: 2.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
   font-family: "Space Mono", monospace;
+  letter-spacing: 0.5px;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.login-divider span {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  font-family: "Space Mono", monospace;
+  white-space: nowrap;
+}
+
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .field {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.4rem;
 }
 
 .field label {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.55rem;
   font-family: "Space Mono", monospace;
 }
 
@@ -119,12 +155,17 @@ body {
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
-  padding: 0.8rem 1rem;
+  padding: 0.85rem 1rem;
   color: var(--text);
   font-family: "Space Mono", monospace;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.6;
 }
 
 .field input:focus {
@@ -144,12 +185,12 @@ body {
   background: var(--accent);
   color: white;
   font-family: "Space Mono", monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   transition: all 0.2s;
 }
 
@@ -172,11 +213,10 @@ body {
 .error-msg {
   color: #ff6b6b;
   font-size: 0.75rem;
-  margin-top: 0.75rem;
+  margin-top: 0.9rem;
   font-family: "Space Mono", monospace;
   text-align: center;
 }
-
 /* Header */
 .header {
   display: flex;
