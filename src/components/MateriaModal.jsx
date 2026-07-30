@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
 
-//Constantes de notas, falta verificar
+//constantes de notas
 const NOTAS = [
   { nota: 5, pcMin: 90 },
   { nota: 4, pcMin: 80 },
@@ -117,12 +117,13 @@ export default function MateriaModal({
   session,
   mapaMaterias, // para obtener correlativas
   onClose,
+  onNavigate, // agrego nuevo prop para navegar entre modales al clickear una materia  en la parte de "necesita aprobadas" y "habilita"
 }) {
   const [asistencia, setAsistencia] = useState(null);
   const [cargandoAsist, setCargandoAsist] = useState(false);
   const [faltasCargadas, setFaltasCargadas] = useState(false);
 
-  if (!materia) return null;
+  if (!materia) return null;  
 
   const { nombre, id, semestre, creditos, estado } = materia;
 
@@ -287,7 +288,7 @@ export default function MateriaModal({
           {periodo ? ` · ${periodo}` : ""}
         </div>
 
-        {/* ─── SECCIÓN: PP y ASISTENCIA ────────────────────────────────────── */}
+        {/* pp y asistencias*/}
         {tienePP ? (
           <div
             style={{
@@ -472,19 +473,26 @@ export default function MateriaModal({
                   {correlativas.map((cid) => {
                     const m = mapaIds[cid];
                     const ok = m?.estado === "aprobada";
+                    const clickable = m && onNavigate;
                     return (
                       <span
                         key={cid}
+                        onClick={() => {
+                          if (!clickable) return;
+                          onClose();
+                          onNavigate(m); // te lleva al modal de la materia cickeada
+                        }}
                         style={{
                           padding: "2px 10px",
                           borderRadius: "20px",
                           fontSize: ".7rem",
                           fontFamily: "Inter, sans-serif",
-                          background: ok
+                          background: ok  
                             ? "rgba(29,185,84,0.15)"
                             : "rgba(255,77,77,0.1)",
                           border: `1px solid ${ok ? "var(--aprobada)" : "var(--bloqueada-t)"}`,
                           color: ok ? "var(--aprobada)" : "var(--bloqueada-t)",
+                          cursor: clickable ? "pointer" : "default",
                         }}
                       >
                         {ok ? "✓" : "✕"} {m ? m.nombre : cid}
@@ -513,9 +521,15 @@ export default function MateriaModal({
                     const m = mapaIds[cid];
                     const ok =
                       m?.estado === "aprobada" || m?.estado === "cursando";
+                    const clickable = m && onNavigate;
                     return (
                       <span
                         key={cid}
+                        onClick={() => {
+                          if (!clickable) return;
+                          onClose();
+                          onNavigate(m);
+                        }}
                         style={{
                           padding: "2px 10px",
                           borderRadius: "20px",
@@ -526,6 +540,7 @@ export default function MateriaModal({
                             : "rgba(255,77,77,0.1)",
                           border: `1px solid ${ok ? "var(--aprobada)" : "var(--bloqueada-t)"}`,
                           color: ok ? "var(--aprobada)" : "var(--bloqueada-t)",
+                          cursor: clickable ? "pointer" : "default",
                         }}
                       >
                         {ok ? "✓" : "✕"} {m ? m.nombre : cid}
@@ -553,6 +568,11 @@ export default function MateriaModal({
                   {desbloquea.map((m) => (
                     <span
                       key={m.id}
+                      onClick={() => {
+                        if (!onNavigate) return;
+                        onClose();
+                        onNavigate(m);
+                      }}
                       style={{
                         padding: "2px 10px",
                         borderRadius: "20px",
@@ -561,6 +581,7 @@ export default function MateriaModal({
                         background: "rgba(29,185,84,0.1)",
                         border: "1px solid var(--accent)",
                         color: "var(--accent)",
+                        cursor: onNavigate ? "pointer" : "default",
                       }}
                     >
                       {m.nombre}
