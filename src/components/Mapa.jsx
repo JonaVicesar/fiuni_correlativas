@@ -149,8 +149,9 @@ export default function Mapa({ session }) {
           materia={modalMateria}
           historialMaterias={historialMaterias}
           session={session}
-          mapaMaterias={mapa.materias} // para las correlativas
+          mapaMaterias={mapa.materias}
           onClose={() => setModalMateria(null)}
+          onNavigate={(m) => setModalMateria(m)} // nuevo prop, abre la materia clickeada en un nuevo modal
         />
       )}
     </div>
