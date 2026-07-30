@@ -83,7 +83,7 @@ export default function Mapa({ session }) {
             textTransform: "uppercase",
             letterSpacing: "3px",
             color: "var(--text-dim)",
-            fontFamily: "Space Mono, monospace",
+            fontFamily: "Inter, sans-serif",
             marginBottom: ".5rem",
           }}
         >
@@ -96,7 +96,7 @@ export default function Mapa({ session }) {
           style={{
             fontSize: ".7rem",
             color: "var(--text-dim)",
-            fontFamily: "Space Mono, monospace",
+            fontFamily: "Inter, sans-serif",
           }}
         >
           Click en cualquier materia para ver su detalle

@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 3px;
   color: var(--text-dim);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   margin-bottom: 0.5rem;
 }
 .calendario-titulo {
@@ -100,7 +100,7 @@
   font-size: 0.65rem;
   color: var(--accent);
   margin-bottom: 0.5rem;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
 }
 .noti-item {
@@ -126,7 +126,7 @@
   border: 1px solid var(--border2);
   background: var(--bg3);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(0.65rem, 2vw, 0.7rem);
   flex: 1 1 auto;
 }
@@ -141,7 +141,7 @@
   letter-spacing: 2px;
   color: var(--accent);
   margin-bottom: 1rem;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 .proximos-lista {
   display: flex;
@@ -155,7 +155,7 @@
   text-align: center;
   background: var(--bg3);
   border-radius: 8px;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 .proximo-card {
   display: flex;
@@ -206,7 +206,7 @@
   padding: 0.25rem 0.5rem;
   border-radius: 20px;
   color: #000;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
 }
 
@@ -261,7 +261,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 0.5rem;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-weight: 500;
 }
 .modal-contenido .field input,
@@ -273,7 +273,7 @@
   border-radius: var(--radius);
   padding: 0.8rem 1rem;
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -308,7 +308,7 @@
   border: 1px solid var(--bloqueada-t);
   background: transparent;
   color: var(--bloqueada-t);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.75rem;
   cursor: pointer;
   font-weight: 600;
@@ -325,7 +325,7 @@
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
   text-align: left;
@@ -375,14 +375,14 @@
   font-weight: 600;
   color: var(--text-dim);
   padding: 4px 0;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 .mini-dia {
   padding: 8px 0;
   text-align: center;
   font-size: 0.75rem;
   font-weight: 400;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
@@ -428,7 +428,7 @@
   animation: spin 0.7s linear infinite;
 }
 .loading-text {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   color: var(--text-dim);
 }
