@@ -40,7 +40,7 @@ return (
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-mark" />
-        <div className="login-logo"><span>FIUNI</span> Correlativas</div>
+        <div className="login-logo"><span>FIUNI</span> Integral 2.0</div>
         <p className="login-sub">Ingresa con tu cuenta institucional</p>
 
         <form onSubmit={handleLogin}>
