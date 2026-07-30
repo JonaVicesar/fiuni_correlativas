@@ -274,6 +274,7 @@ export default function Dashboard({ session }) {
           session={session}
           mapaMaterias={mapaMaterias}
           onClose={() => setModalMateria(null)}
+          onNavigate={(m) => setModalMateria(m)} // nuevo prop, abre la materia clickeada en un nuevo modal
         />
       )}
     </div>
