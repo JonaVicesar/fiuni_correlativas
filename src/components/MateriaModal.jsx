@@ -579,8 +579,7 @@ export default function MateriaModal({
                         fontSize: ".7rem",
                         fontFamily: "Inter, sans-serif",
                         background: "rgba(29,185,84,0.1)",
-                        border: "1px solid var(--accent)",
-                        color: "var(--accent)",
+                        border: "1px solid var(--aprobada)",
                         cursor: onNavigate ? "pointer" : "default",
                       }}
                     >
