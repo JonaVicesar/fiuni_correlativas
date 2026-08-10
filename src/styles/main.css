@@ -514,6 +514,315 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* Header zona izquierdo el hamburguer button */
+.header-izq {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-hamburguesa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
+}
+
+.btn-hamburguesa:hover {
+  border-color: var(--accent);
+  background: rgba(229, 62, 62, 0.1);
+}
+
+[data-theme="dark"] .btn-hamburguesa:hover {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* Sidebar */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-overlay.abierto {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  background: var(--bg3);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+}
+
+.sidebar-overlay.abierto .sidebar {
+  transform: translateX(0);
+}
+
+.sidebar-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-titulo {
+  font-family: "Lora", serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sidebar-cerrar {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s;
+}
+
+.sidebar-cerrar:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-item:hover {
+  background: var(--bg2);
+  color: var(--text);
+}
+
+.sidebar-item.activo {
+  background: rgba(229, 62, 62, 0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .sidebar-item.activo {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.sidebar-flecha {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.sidebar-submenu-items {
+  display: flex;
+  flex-direction: column;
+  margin: 0.15rem 0 0.25rem 0.9rem;
+  border-left: 1px solid var(--border2);
+  animation: fadeUp 0.2s ease;
+}
+
+.sidebar-link {
+  padding: 0.5rem 0.9rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.sidebar-link:hover {
+  background: var(--bg2);
+  color: var(--accent);
+}
+
+/* Aulas, el buscador y las tarjetitas de aulas */
+.aulas-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.aulas-search {
+  width: 100%;
+  max-width: 340px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.aulas-search::placeholder {
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.aulas-search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+[data-theme="dark"] .aulas-search:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+/* los tarjetitas van todas en una linea */
+.aulas-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.aulas-chip {
+  flex-shrink: 0; /* no achicar las tarjetitas */
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border2);
+  border-radius: 500px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aulas-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.aulas-chip.activo {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+[data-theme="dark"] .aulas-chip.activo {
+  color: #000;
+}
+
+.aulas-grid-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.aulas-grid-wrap > div {
+  min-width: 700px;
+}
+
+.aulas-libre {
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px dashed var(--border2);
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  font-family: "Inter", sans-serif;
+  text-align: center;
+}
+
+/* tarjetita de aula libre en la vista "ocupadas ahora" */
+.aulas-libre-chip {
+  padding: 0.45rem 0.9rem;
+  border-radius: 500px;
+  background: rgba(56, 161, 105, 0.1);
+  border: 1px solid var(--aprobada);
+  color: var(--aprobada);
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+}
+
+.aulas-clase {
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: rgba(49, 130, 206, 0.1);
+  border: 1px solid var(--cursando);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.aulas-hora {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--cursando);
+  font-family: "Inter", sans-serif;
+}
+
+.aulas-materia {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+}
+
+.aulas-curso {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  font-family: "Inter", sans-serif;
+}
+
+
 /*responsive*/
 
 /* materias siempre en fila nunca columna sola */
@@ -556,6 +865,8 @@ body {
 
   .main { padding: 1rem; }
 
+  .sidebar { width: min(300px, 85vw); }
+
   /* materias en dos columnas minimo */
   .nodo {
     flex: 1 1 120px;
@@ -584,6 +895,7 @@ body {
     gap: 0.4rem;
   }
   .header-logo { flex: 1; }
+  .header-izq { flex: 1; }
   .header-user { order: 1; }
   .header-nav {
     order: 2;
