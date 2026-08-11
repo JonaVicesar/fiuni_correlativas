@@ -5,8 +5,11 @@ import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
 import Agenda from "./components/Calendario";
 import Aulas from "./components/Aulas";
+import Examenes from "./components/Examenes";
+import Perfil from "./components/Perfil";
 import Sidebar from "./components/Sidebar";
 import ToggleTema from "./components/ToggleTema";
+import MenuPerfil from "./components/MenuPerfil";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -69,9 +72,11 @@ export default function App() {
         <div className="header-user">
           <ToggleTema />
           <span className="header-nombre"> {session.nombre}</span>
-          <button className="btn-logout" onClick={handleLogout}>
-            Salir
-          </button>
+          <MenuPerfil
+            session={session}
+            onLogout={handleLogout}
+            onNavegar={setVista}
+          />
         </div>
       </header>
 
@@ -81,7 +86,11 @@ export default function App() {
         <Agenda session={session} />
       ) : vista === "aulas" ? (
         <Aulas />
-      )  : (
+      ) : vista === "examenes" ? (
+        <Examenes session={session} />
+      ) : vista === "perfil" ? (
+        <Perfil session={session} />
+      ) : (
         <Mapa session={session} />
       )}
       <Sidebar
