@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { CARRERAS_DOCUMENTOS } from "../data/carreras";
 
 const OPCIONES_NAV = [
+  ["aulas", "Aulas"],
   ["dashboard", "Mis Materias"],
   ["mapa", "Correlativas"],
-  ["agenda", "Agenda"],
-  ];
+  ["agenda", "Calendario"],
+  ["examenes", "Exámenes"], 
+];
 
 export default function Sidebar({ abierto, onClose, vista, onNavegar }) {
   const [submenuDoc, setSubmenuDoc] = useState(false);
@@ -46,7 +48,7 @@ export default function Sidebar({ abierto, onClose, vista, onNavegar }) {
             </button>
           ))}
 
-          {/* submenu para formularios de documentos */}
+          {/* submenu para formularios para documentos */}
           <div className="sidebar-submenu">
             <button
               className={`sidebar-item ${submenuDoc ? "activo" : ""}`}
@@ -72,14 +74,6 @@ export default function Sidebar({ abierto, onClose, vista, onNavegar }) {
               </div>
             )}
           </div>
-
-          <button
-            className={`sidebar-item ${vista === "aulas" ? "activo" : ""}`}
-            onClick={() => ir("aulas")}
-          >
-            Aulas
-          </button>
-
         </nav>
       </aside>
     </div>
