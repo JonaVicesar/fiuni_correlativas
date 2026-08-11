@@ -662,7 +662,6 @@ export default function Perfil({ session }) {
                 marginTop: ".35rem",
               }}
             >
-              Click en la foto para ampliarla
             </div>
           )}
         </div>
