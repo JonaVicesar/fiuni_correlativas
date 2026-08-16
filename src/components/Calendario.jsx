@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { limpiarNombre } from "../utils/limpiarNombre";
-import { parseJwt } from "../api";
+import { apiFetch, parseJwt } from "../api";
+import "../styles/calendario.css";
 
 // El backend de la FIUNI agrega un "*" a las materias que son correlativas.
 // Esta función los elimina para que la interfaz se vea más limpia.
@@ -31,6 +32,34 @@ const MESES_CAL = [...MESES];
 
 // Días de la semana en versión corta (para el mini calendario)
 const DIAS_SEMANA_CAL = ["L", "M", "M", "J", "V", "S", "D"];
+
+const ESTADOS_NO_INSCRIPTOS = new Set([
+  "aprobada",
+  "bloqueada",
+  "disponible",
+  "habilitada",
+  "retirada",
+  "cancelada",
+]);
+
+function esMateriaCursando(materia, anhoActual = new Date().getFullYear()) {
+  if (materia?.anho !== anhoActual || materia.inscripto === false) return false;
+  return !ESTADOS_NO_INSCRIPTOS.has(
+    String(materia.estado || "").trim().toLowerCase(),
+  );
+}
+
+function fechaLocalISO(fecha = new Date()) {
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+}
+
+function obtenerIdentidadUsuario(token) {
+  const payload = parseJwt(token);
+  return payload?.unique_name || payload?.email || payload?.sub || null;
+}
 
 // ─── Iconos y colores para cada tipo de evento ────────────────────────────
 // Cada tipo de evento (parcial, final, feriado, etc.) tiene un emoji y un color
@@ -114,7 +143,7 @@ function generarCalendarioICS(eventos) {
   const header = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//FIUNI//Agenda Academica//ES",
+    "PRODID:-//FIUNI//Calendario Academico//ES",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ].join("\n");
@@ -172,7 +201,7 @@ export default function Calendario({ session }) {
   const [error, setError] = useState(""); // Mensaje de error global
 
   const [fechaActual, setFechaActual] = useState(new Date()); // Fecha de referencia para la vista
-  const [vista, setVista] = useState("mensual"); // "mensual" o "semanal"
+  const [vista, setVista] = useState("semanal"); // "mensual" o "semanal"
 
   const [mostrarModal, setMostrarModal] = useState(false); // Controla el modal de crear/editar
   const [eventoEditando, setEventoEditando] = useState(null); // Evento que se está editando (null = nuevo)
@@ -180,8 +209,6 @@ export default function Calendario({ session }) {
   const [filtroMateria, setFiltroMateria] = useState("todas"); // Filtro por materia
   const [filtroTipo, setFiltroTipo] = useState("todos"); // Filtro por tipo de evento
 
-  const [notificaciones, setNotificaciones] = useState([]); // Próximos eventos (3 días)
-  const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false); // Dropdown de notificaciones
   const [diaSeleccionado, setDiaSeleccionado] = useState(null); // Día seleccionado para el popover
 
   // ─── CARGA INICIAL DE MATERIAS Y EVENTOS (UN SOLO EFECTO) ──────────────
@@ -189,16 +216,25 @@ export default function Calendario({ session }) {
   // y luego consulta los eventos de esas materias en Supabase.
   // Todo se hace en un solo efecto para evitar parpadeos de carga.
   useEffect(() => {
-    if (!session?.carreraId) return; // Sin carrera no hay nada que cargar
+    if (!session?.carreraId) {
+      setMaterias([]);
+      setMateriasIds([]);
+      setEventos([]);
+      setError("No pudimos identificar tu carrera; solo se muestran los eventos académicos generales.");
+      setLoading(false);
+      return;
+    }
+    let cancelado = false;
     setLoading(true);
+    setError("");
 
     const cargarDatos = async () => {
       try {
         // 1) Obtener materias desde la API de la FIUNI
-        const { apiFetch } = await import("../api");
         const data = await apiFetch("/materias", { token: session.token });
+        if (cancelado) return;
         const cursando = data
-          .filter((m) => m.anho === new Date().getFullYear()) // Solo las del año actual
+          .filter((materia) => esMateriaCursando(materia))
           .map((m) => ({ ...m, materia: limpiarNombre(m.materia) })); // Limpiar asteriscos
         setMaterias(cursando);
         const ids = cursando.map((m) => m.codigoMateria);
@@ -214,20 +250,23 @@ export default function Calendario({ session }) {
             .is("eliminado_por", null) // Ocultar los eliminados (soft delete)
             .order("fecha", { ascending: true });
 
-          if (eventosError) setError(eventosError.message);
-          else setEventos(eventosData || []);
+          if (eventosError) throw eventosError;
+          if (!cancelado) setEventos(eventosData || []);
         } else {
-          setEventos([]); // Sin materias, sin eventos
+          if (!cancelado) setEventos([]); // Sin materias, sin eventos
         }
       } catch (err) {
-        setError(err.message);
+        if (!cancelado) setError(err.message || "No se pudo cargar el calendario");
       } finally {
-        setLoading(false); // Ocultar spinner
+        if (!cancelado) setLoading(false); // Ocultar spinner
       }
     };
 
     cargarDatos();
-  }, [session.carreraId]); // Se ejecuta al cambiar de carrera (o al montar)
+    return () => {
+      cancelado = true;
+    };
+  }, [session?.carreraId, session?.token]); // Se ejecuta al cambiar de carrera o sesiÃ³n
 
   // ─── SUSCRIPCIÓN EN TIEMPO REAL ────────────────────────────────────────
   // Escucha cambios en la tabla "eventos" (inserciones, actualizaciones, eliminaciones)
@@ -246,27 +285,22 @@ export default function Calendario({ session }) {
           filter: `carrera_id=eq.${session.carreraId}`, // Solo eventos de su carrera
         },
         (payload) => {
-          const ev = payload.new || payload.old;
-          // Solo procesar si el evento pertenece a una de las materias del usuario
-          if (ev && materiasIds.includes(ev.materia_id)) {
-            if (payload.eventType === "INSERT") {
-              if (!payload.new.eliminado_por)
-                // Ignorar si ya viene marcado como eliminado
-                setEventos((prev) => [...prev, payload.new]);
-            } else if (payload.eventType === "UPDATE") {
-              if (payload.new.eliminado_por)
-                setEventos((prev) =>
-                  prev.filter((e) => e.id !== payload.new.id),
-                );
-              // Soft delete
-              else
-                setEventos((prev) =>
-                  prev.map((e) => (e.id === payload.new.id ? payload.new : e)),
-                );
-            } else if (payload.eventType === "DELETE") {
-              setEventos((prev) => prev.filter((e) => e.id !== payload.old.id)); // Borrado real
-            }
+          if (payload.eventType === "DELETE") {
+            setEventos((prev) => prev.filter((e) => e.id !== payload.old.id));
+            return;
           }
+
+          const evento = payload.new;
+          const perteneceAMateria = materiasIds.includes(evento.materia_id);
+          setEventos((prev) => {
+            if (!perteneceAMateria || evento.eliminado_por) {
+              return prev.filter((e) => e.id !== evento.id);
+            }
+            const existe = prev.some((e) => e.id === evento.id);
+            return existe
+              ? prev.map((e) => (e.id === evento.id ? evento : e))
+              : [...prev, evento];
+          });
         },
       )
       .subscribe();
@@ -281,47 +315,26 @@ export default function Calendario({ session }) {
   // Los eventos oficiales (feriados, inicio/fin de clases, etc.) están en la tabla
   // "calendario_academico" y se muestran a todos los estudiantes de la carrera.
   useEffect(() => {
-    if (!session?.carreraId) return;
+    let cancelado = false;
     const cargarOficiales = async () => {
-      const { data } = await supabase
+      let consulta = supabase
         .from("calendario_academico")
-        .select("*")
-        .or(`carrera_id.is.null,carrera_id.eq.${session.carreraId}`); // Todas las carreras o la suya
-      if (data) setEventosOficiales(data);
+        .select("*");
+      consulta = session?.carreraId
+        ? consulta.or(`carrera_id.is.null,carrera_id.eq.${session.carreraId}`)
+        : consulta.is("carrera_id", null);
+      const { data, error: eventosOficialesError } = await consulta;
+      if (eventosOficialesError) {
+        if (!cancelado) setError(eventosOficialesError.message);
+        return;
+      }
+      if (!cancelado) setEventosOficiales(data || []);
     };
     cargarOficiales();
-  }, [session.carreraId]);
-
-  // ─── NOTIFICACIONES ─────────────────────────────────────────────────────
-  // Cada vez que cambian los eventos (de estudiantes u oficiales), recalcula
-  // cuáles están en los próximos 3 días para mostrarlos en la campana.
-  useEffect(() => {
-    const ahora = new Date();
-    const limite = new Date(ahora);
-    limite.setDate(limite.getDate() + 3); // Ventana de 3 días
-
-    // Unificar eventos normales y oficiales para el cálculo
-    const todosLosEventos = [
-      ...eventos.map((e) => ({ ...e, es_oficial: false })),
-      ...eventosOficiales.map((e) => ({
-        ...e,
-        es_oficial: true,
-        materia_id: null,
-        materia_nombre: "Institucional",
-        tipo: e.tipo || "feriado",
-        fecha: new Date(e.fecha + "T00:00:00").toISOString(),
-      })),
-    ];
-
-    const proximos = todosLosEventos
-      .filter((e) => {
-        const f = new Date(e.fecha);
-        return f >= ahora && f <= limite;
-      })
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Más próximos primero
-
-    setNotificaciones(proximos);
-  }, [eventos, eventosOficiales]);
+    return () => {
+      cancelado = true;
+    };
+  }, [session?.carreraId]);
 
   // ─── NAVEGACIÓN DEL CALENDARIO ──────────────────────────────────────────
   // Funciones para cambiar el mes/semana visible y volver a "hoy".
@@ -420,8 +433,8 @@ export default function Calendario({ session }) {
   const handleGuardarEvento = async (datosEvento) => {
     try {
       // Extraemos el correo real del token (campo unique_name)
-      const payload = parseJwt(session.token);
-      const creador = payload?.unique_name || session.token; // fallback al token si no existe
+      const creador = obtenerIdentidadUsuario(session.token);
+      if (!creador) throw new Error("No se pudo identificar al usuario autenticado");
 
       if (eventoEditando) {
         const { error } = await supabase
@@ -461,13 +474,14 @@ export default function Calendario({ session }) {
   const handleEliminarEvento = async (eventoId) => {
     if (!confirm("¿Estás seguro de eliminar este evento?")) return;
     try {
-      const payload = parseJwt(session.token);
-      const eliminador = payload?.unique_name || session.token;
+      const eliminador = obtenerIdentidadUsuario(session.token);
+      if (!eliminador) throw new Error("No se pudo identificar al usuario autenticado");
 
-      await supabase
+      const { error: eliminarError } = await supabase
         .from("eventos")
         .update({ eliminado_por: eliminador }) // ← correo real extraído del token
         .eq("id", eventoId);
+      if (eliminarError) throw eliminarError;
 
       setMostrarModal(false);
       setEventoEditando(null);
@@ -541,6 +555,7 @@ export default function Calendario({ session }) {
           Calendario
         </h1>
       </div>
+      {error && <div className="error-msg" style={{ marginBottom: "1rem" }}>{error}</div>}
 
       {/* ─── BARRA DE CONTROLES ────────────────────────────────────────── */}
       <div
@@ -565,6 +580,7 @@ export default function Calendario({ session }) {
           <button
             onClick={vista === "mensual" ? irMesAnterior : irSemanaAnterior}
             className="btn-logout"
+            aria-label={vista === "mensual" ? "Mes anterior" : "Semana anterior"}
           >
             ←
           </button>
@@ -583,6 +599,7 @@ export default function Calendario({ session }) {
           <button
             onClick={vista === "mensual" ? irMesSiguiente : irSemanaSiguiente}
             className="btn-logout"
+            aria-label={vista === "mensual" ? "Mes siguiente" : "Semana siguiente"}
           >
             →
           </button>
@@ -604,7 +621,7 @@ export default function Calendario({ session }) {
           </button>
         </div>
 
-        {/* Acciones: campana de notificaciones, toggle vista, exportar, nuevo evento */}
+        {/* Acciones: toggle vista, exportar, nuevo evento */}
         <div
           style={{
             display: "flex",
@@ -613,109 +630,6 @@ export default function Calendario({ session }) {
             flexWrap: "wrap",
           }}
         >
-          {/* Campana de notificaciones (solo visible si hay próximos eventos) */}
-          {notificaciones.length > 0 && (
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
-                style={{
-                  padding: "0.5rem",
-                  borderRadius: "50%",
-                  border: "1px solid var(--border2)",
-                  background: "transparent",
-                  color: "var(--accent)",
-                  cursor: "pointer",
-                  fontSize: "1.2rem",
-                  position: "relative",
-                }}
-              >
-                🔔
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    background: "var(--bloqueada-t)",
-                    color: "#fff",
-                    borderRadius: "50%",
-                    width: "18px",
-                    height: "18px",
-                    fontSize: "0.6rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {notificaciones.length}
-                </span>
-              </button>
-              {/* Dropdown con la lista de próximos eventos */}
-              {mostrarNotificaciones && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "8px",
-                    background: "var(--bg3)",
-                    border: "1px solid var(--border2)",
-                    borderRadius: "12px",
-                    padding: "0.75rem",
-                    minWidth: "280px",
-                    maxWidth: "90vw",
-                    maxHeight: "300px",
-                    overflowY: "auto",
-                    zIndex: 300,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "var(--accent)",
-                      marginBottom: "0.5rem",
-                      fontFamily: "Space Mono, monospace",
-                      fontWeight: "600",
-                    }}
-                  >
-                    PRÓXIMOS EVENTOS
-                  </div>
-                  {notificaciones.map((ev) => (
-                    <div
-                      key={ev.id}
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid var(--border)",
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontWeight: "600",
-                          color: ev.es_oficial
-                            ? "var(--accent)"
-                            : COLORES_TIPO[ev.tipo],
-                        }}
-                      >
-                        {ICONOS_TIPO[ev.tipo] || "📅"} {ev.titulo}
-                      </div>
-                      <div
-                        style={{
-                          color: "var(--text-dim)",
-                          fontSize: "0.65rem",
-                        }}
-                      >
-                        {limpiarNombre(ev.materia_nombre || "")} ·{" "}
-                        {formatearFecha(ev.fecha)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Toggle vista mensual / semanal */}
           <div
             style={{
@@ -780,6 +694,8 @@ export default function Calendario({ session }) {
               setEventoEditando(null); // null = modo creación
               setMostrarModal(true);
             }}
+            disabled={!session?.carreraId || materias.length === 0}
+            title={!session?.carreraId || materias.length === 0 ? "No hay materias disponibles para crear un evento" : undefined}
             style={{
               padding: "0.5rem 1rem",
               borderRadius: "8px",
@@ -787,7 +703,8 @@ export default function Calendario({ session }) {
               background: "var(--accent)",
               color: "#000",
               fontWeight: "600",
-              cursor: "pointer",
+              cursor: !session?.carreraId || materias.length === 0 ? "not-allowed" : "pointer",
+              opacity: !session?.carreraId || materias.length === 0 ? 0.5 : 1,
               fontFamily: "Space Mono, monospace",
               fontSize: "0.75rem",
             }}
@@ -1146,134 +1063,6 @@ export default function Calendario({ session }) {
         </div>
       )}
 
-      {/* ─── LISTA DE PRÓXIMOS EVENTOS ──────────────────────────────────── */}
-      <div style={{ marginTop: "2rem" }}>
-        <div
-          style={{
-            fontSize: "0.7rem",
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-            color: "var(--accent)",
-            marginBottom: "1rem",
-            fontFamily: "Space Mono, monospace",
-          }}
-        >
-          Próximos eventos
-        </div>
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
-          {notificaciones.length === 0 && (
-            <div
-              style={{
-                padding: "1rem",
-                color: "var(--text-dim)",
-                fontSize: "0.8rem",
-                fontFamily: "Space Mono, monospace",
-                textAlign: "center",
-                background: "var(--bg3)",
-                borderRadius: "8px",
-              }}
-            >
-              No hay eventos próximos en los siguientes 3 días
-            </div>
-          )}
-          {notificaciones.map((ev) => {
-            const materia = materias.find(
-              (m) => m.codigoMateria === ev.materia_id,
-            );
-            return (
-              <div
-                key={ev.id}
-                onClick={() => {
-                  if (ev.es_oficial) return;
-                  setEventoEditando(ev);
-                  setMostrarModal(true);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "clamp(0.5rem, 2vw, 1rem)",
-                  padding: "clamp(0.5rem, 2vw, 0.75rem)",
-                  background: "var(--bg3)",
-                  border: ev.es_oficial
-                    ? "1px dashed var(--accent)"
-                    : "1px solid var(--border)",
-                  borderRadius: "8px",
-                  cursor: ev.es_oficial ? "default" : "pointer",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!ev.es_oficial)
-                    e.currentTarget.style.borderColor =
-                      COLORES_TIPO[ev.tipo] || "var(--accent)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!ev.es_oficial)
-                    e.currentTarget.style.borderColor = "var(--border)";
-                }}
-              >
-                <div
-                  style={{
-                    width: "clamp(32px, 8vw, 40px)",
-                    height: "clamp(32px, 8vw, 40px)",
-                    borderRadius: "8px",
-                    background: ev.es_oficial
-                      ? "var(--bg3)"
-                      : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                    border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "clamp(1rem, 3vw, 1.2rem)",
-                  }}
-                >
-                  {ICONOS_TIPO[ev.tipo] || "📅"}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontWeight: "600",
-                      fontSize: "clamp(0.75rem, 2.5vw, 0.85rem)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {ev.titulo}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "clamp(0.65rem, 2vw, 0.7rem)",
-                      color: "var(--text-dim)",
-                    }}
-                  >
-                    {materia?.materia || limpiarNombre(ev.materia_nombre || "")}{" "}
-                    · {formatearFecha(ev.fecha)}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: "clamp(0.5rem, 1.8vw, 0.6rem)",
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "20px",
-                    background: ev.es_oficial
-                      ? "var(--bg3)"
-                      : COLORES_TIPO[ev.tipo] || "var(--accent)",
-                    border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
-                    color: ev.es_oficial ? "var(--accent)" : "#000",
-                    fontFamily: "Space Mono, monospace",
-                    fontWeight: "600",
-                  }}
-                >
-                  {ev.tipo.toUpperCase()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ─── MODAL DE CREAR/EDITAR EVENTO ────────────────────────────────── */}
       {mostrarModal && (
         <ModalEvento
@@ -1285,7 +1074,6 @@ export default function Calendario({ session }) {
             setMostrarModal(false);
             setEventoEditando(null);
           }}
-          session={session}
         />
       )}
 
@@ -1421,7 +1209,7 @@ export default function Calendario({ session }) {
 // ─── COMPONENTE MODAL DE EVENTO ──────────────────────────────────────────
 // Subcomponente que maneja el formulario de creación/edición de un evento.
 // Incluye un mini calendario para seleccionar la fecha sin escribir manualmente.
-function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
+function ModalEvento({ evento, materias, onSave, onDelete, onClose }) {
   // Estado del formulario, inicializado con los datos del evento si se está editando
   const [form, setForm] = useState({
     titulo: evento?.titulo || "",
@@ -1431,7 +1219,7 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
     tipo: evento?.tipo || "parcial",
     fecha: evento?.fecha
       ? new Date(evento.fecha).toISOString().slice(0, 10) // YYYY-MM-DD
-      : new Date().toISOString().slice(0, 10),
+      : fechaLocalISO(),
   });
   const [error, setError] = useState(""); // Error de validación
   const [saving, setSaving] = useState(false); // Para deshabilitar el botón mientras guarda
@@ -1628,7 +1416,7 @@ function ModalEvento({ evento, materias, onSave, onDelete, onClose, session }) {
 
           {/* Fecha con mini calendario desplegable hacia arriba */}
           <div className="field">
-            <label>Fecha del examen</label>
+            <label>Fecha del evento</label>
             <div className="fecha-selector">
               <button
                 type="button"
