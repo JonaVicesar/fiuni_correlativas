@@ -68,14 +68,14 @@ export default function App() {
         </div>
       </header>
 
-      <div className="app-main">
+      <div className="main">
         {vista === "dashboard" ? (
           <Dashboard session={session} />
         ) : vista === "agenda" ? (
           <Agenda session={session} />
         ) : vista === "aulas" ? (
           <Aulas />
-        ) : vista === "examenes" ? (
+        ) : vista === "examenes" ? (  
           <Examenes session={session} />
         ) : vista === "perfil" ? (
           <Perfil session={session} />
@@ -89,7 +89,6 @@ export default function App() {
           onNavegar={setVista}
         />
       </div>
-
       <Footer />
     </div>
   );
