@@ -10,6 +10,7 @@ import Perfil from "./components/Perfil";
 import Sidebar from "./components/Sidebar";
 import ToggleTema from "./components/ToggleTema";
 import MenuPerfil from "./components/MenuPerfil";
+import Footer from "./components/Footer";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -27,78 +28,69 @@ export default function App() {
   if (!session) return <Login onLogin={handleLogin} />;
 
   return (
-    <>
+    <div className="app-wrap">
       <header className="header">
-        <div className="header-izq">
-          <button
-            className="btn-hamburguesa"
-            onClick={() => setSidebarAbierto(true)}
-            aria-label="Abrir menú"
-          >
-            ☰
-          </button>
-         { /*  Voy a eliminar hasta que encuentre un mejor logo
-         <div className="header-logo">
-            <img src="/Fiuni-Logo.svg" alt="FIUNI" height={36} />
-          </div>  */}
-        </div>
-        <nav className="header-nav">
-          {[
-            ["dashboard", "Mis Materias"],
-            ["mapa", "Correlativas"],
-            ["agenda", "Agenda"],
-          ].map(([v, label]) => (
+        <div className="header-inner">
+          <div className="header-izq">
             <button
-              key={v}
-              onClick={() => setVista(v)}
-              style={{
-                background: vista === v ? "var(--accent)" : "transparent",
-                color: vista === v ? "#000" : "var(--text-dim)",
-                padding: ".4rem .9rem",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Lora, serif",
-                fontSize: ".85rem",
-                fontWeight: "600",
-                transition: "all .2s",
-              }}
+              className="btn-hamburguesa"
+              onClick={() => setSidebarAbierto(true)}
+              aria-label="Abrir menú"
             >
-              {label}
+              ☰
             </button>
-          ))}
-        </nav>
+          </div>
+          <nav className="header-nav">
+            {[
+              ["dashboard", "Mis Materias"],
+              ["mapa", "Correlativas"],
+              ["agenda", "Agenda"],
+            ].map(([v, label]) => (
+              <button
+                key={v}
+                className={`header-nav-btn${vista === v ? " activo" : ""}`}
+                onClick={() => setVista(v)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
 
-        <div className="header-user">
-          <ToggleTema />
-          <span className="header-nombre"> {session.nombre}</span>
-          <MenuPerfil
-            session={session}
-            onLogout={handleLogout}
-            onNavegar={setVista}
-          />
+          <div className="header-user">
+            <ToggleTema />
+            <span className="header-nombre"> {session.nombre}</span>
+            <MenuPerfil
+              session={session}
+              onLogout={handleLogout}
+              onNavegar={setVista}
+            />
+          </div>
         </div>
       </header>
 
-      {vista === "dashboard" ? (
-        <Dashboard session={session} />
-      ) : vista === "agenda" ? (
-        <Agenda session={session} />
-      ) : vista === "aulas" ? (
-        <Aulas />
-      ) : vista === "examenes" ? (
-        <Examenes session={session} />
-      ) : vista === "perfil" ? (
-        <Perfil session={session} />
-      ) : (
-        <Mapa session={session} />
-      )}
-      <Sidebar
-        abierto={sidebarAbierto}
-        onClose={() => setSidebarAbierto(false)}
-        vista={vista}
-        onNavegar={setVista}
-      />
-    </>
+      <div className="app-main">
+        {vista === "dashboard" ? (
+          <Dashboard session={session} />
+        ) : vista === "agenda" ? (
+          <Agenda session={session} />
+        ) : vista === "aulas" ? (
+          <Aulas />
+        ) : vista === "examenes" ? (
+          <Examenes session={session} />
+        ) : vista === "perfil" ? (
+          <Perfil session={session} />
+        ) : (
+          <Mapa session={session} />
+        )}
+        <Sidebar
+          abierto={sidebarAbierto}
+          onClose={() => setSidebarAbierto(false)}
+          vista={vista}
+          onNavegar={setVista}
+        />
+      </div>
+
+      <Footer />
+    </div>
   );
 }
