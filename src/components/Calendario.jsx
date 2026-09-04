@@ -201,7 +201,7 @@ export default function Calendario({ session }) {
   const [error, setError] = useState(""); // Mensaje de error global
 
   const [fechaActual, setFechaActual] = useState(new Date()); // Fecha de referencia para la vista
-  const [vista, setVista] = useState("semanal"); // "mensual" o "semanal"
+  const [vista, setVista] = useState("proximos"); // "mensual", "semanal" 
 
   const [mostrarModal, setMostrarModal] = useState(false); // Controla el modal de crear/editar
   const [eventoEditando, setEventoEditando] = useState(null); // Evento que se está editando (null = nuevo)
@@ -630,7 +630,7 @@ export default function Calendario({ session }) {
             flexWrap: "wrap",
           }}
         >
-          {/* Toggle vista mensual / semanal */}
+          {/* Toggle vista mensual / semanal / proximos */}
           <div
             style={{
               display: "flex",
@@ -668,6 +668,21 @@ export default function Calendario({ session }) {
               }}
             >
               Semana
+            </button>
+            <button
+              onClick={() => setVista("proximos")}
+              style={{
+                padding: "0.4rem 0.8rem",
+                border: "none",
+                background:
+                  vista === "proximos" ? "var(--accent)" : "transparent",
+                color: vista === "proximos" ? "#000" : "var(--text-dim)",
+                cursor: "pointer",
+                fontFamily: "Space Mono, monospace",
+                fontSize: "0.7rem",
+              }}
+            >
+              Próximos
             </button>
           </div>
 
@@ -1060,6 +1075,40 @@ export default function Calendario({ session }) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* para listar mas rapido*/}
+      {vista === "proximos" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {(() => {
+            const hoy0 = new Date(); hoy0.setHours(0,0,0,0);
+            const proximos = [...eventosFiltrados].filter(ev => new Date(ev.fecha) >= hoy0).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            if (proximos.length === 0) return <div style={{ color: "var(--text-dim)", textAlign: "center", padding: "1rem" }}>No hay eventos</div>;
+            return proximos.map((ev) => (
+              <div
+                key={ev.id}
+                onClick={() => { if (ev.es_oficial) return; setEventoEditando(ev); setMostrarModal(true); }}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem",
+                  padding: "0.75rem", borderRadius: "8px",
+                  background: ev.es_oficial ? "var(--bg3)" : COLORES_TIPO[ev.tipo] || "var(--accent)",
+                  border: ev.es_oficial ? "1px dashed var(--accent)" : "none",
+                  color: ev.es_oficial ? "var(--accent)" : "#000",
+                  cursor: ev.es_oficial ? "default" : "pointer",
+                  fontFamily: "Space Mono, monospace",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: "600", fontSize: "0.8rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {ICONOS_TIPO[ev.tipo] || "📅"} {ev.titulo} — {limpiarNombre(ev.materia_nombre || "")}
+                  </div>
+                  <div style={{ fontSize: "0.65rem", opacity: 0.8 }}>{new Date(ev.fecha).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
+                </div>
+                <span style={{ fontSize: "0.7rem", opacity: 0.9, whiteSpace: "nowrap" }}>{ev.tipo}</span>
+              </div>
+            ));
+          })()}
         </div>
       )}
 
