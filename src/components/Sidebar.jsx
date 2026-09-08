@@ -6,7 +6,8 @@ const OPCIONES_NAV = [
   ["dashboard", "Mis Materias"],
   ["mapa", "Correlativas"],
   ["agenda", "Calendario"],
-  ["examenes", "Exámenes"], 
+  ["examenes", "Exámenes"],
+  ["notificaciones", "Notificaciones"],
 ];
 
 export default function Sidebar({ abierto, onClose, vista, onNavegar }) {
