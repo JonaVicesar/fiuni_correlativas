@@ -14,57 +14,73 @@ import Footer from "./components/Footer";
 import Notificaciones from "./components/Notificaciones";
 
 export default function App() {
-				const [session, setSession] = useState(() => storage.get("session"));
-				const [vista, setVista] = useState("dashboard");
-				const [sidebarAbierto, setSidebarAbierto] = useState(false);
-				const [avisoNotif, setAvisoNotif] = useState(false);
-				const [avisoNotifCerrado, setAvisoNotifCerrado] = useState(() => {
-					try { return localStorage.getItem("notif_aviso_cerrado")==="1"; } catch { return false; }
-				});
+  const [session, setSession] = useState(() => storage.get("session"));
+  const [vista, setVista] = useState("dashboard");
+  const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const [avisoNotif, setAvisoNotif] = useState(false);
+  const [avisoNotifCerrado, setAvisoNotifCerrado] = useState(() => {
+    try {
+      return localStorage.getItem("notif_aviso_cerrado") === "1";
+    } catch {
+      return false;
+    }
+  });
 
-				useEffect(()=>{
-					if(!session?.token || vista==="notificaciones") { setAvisoNotif(false); return; }
-					if(avisoNotifCerrado) { setAvisoNotif(false); return; }
-					let cancel=false;
-					apiFetch("/notificaciones/estado", {token: session.token, cache:false}).then(estado=>{
-						if(cancel) return;
-						const subs = estado?.suscripciones || [];
-						const pref = estado?.preferencias || null;
-						const suscrito = subs.length>0 && pref && pref.habilitado;
-						setAvisoNotif(!suscrito);
-					}).catch(()=>{});
-					return()=>{cancel=true;};
-				}, [session?.token, vista, avisoNotifCerrado]);
+  useEffect(() => {
+    if (!session?.token || vista === "notificaciones") {
+      setAvisoNotif(false);
+      return;
+    }
+    if (avisoNotifCerrado) {
+      setAvisoNotif(false);
+      return;
+    }
+    let cancel = false;
+    apiFetch("/notificaciones/estado", { token: session.token, cache: false })
+      .then((estado) => {
+        if (cancel) return;
+        const subs = estado?.suscripciones || [];
+        const pref = estado?.preferencias || null;
+        const suscrito = subs.length > 0 && pref && pref.habilitado;
+        setAvisoNotif(!suscrito);
+      })
+      .catch(() => {});
+    return () => {
+      cancel = true;
+    };
+  }, [session?.token, vista, avisoNotifCerrado]);
 
-				const cerrarAvisoNotif = ()=>{
-					try{ localStorage.setItem("notif_aviso_cerrado","1"); }catch{}
-					setAvisoNotifCerrado(true);
-					setAvisoNotif(false);
-				};
+  const cerrarAvisoNotif = () => {
+    try {
+      localStorage.setItem("notif_aviso_cerrado", "1");
+    } catch {}
+    setAvisoNotifCerrado(true);
+    setAvisoNotif(false);
+  };
 
-				function handleLogin(data) {
-								setSession(data);
-				}
-				function handleLogout() {
-								storage.del("session");
-								setSession(null);
-				}
+  function handleLogin(data) {
+    setSession(data);
+  }
+  function handleLogout() {
+    storage.del("session");
+    setSession(null);
+  }
 
-				if (!session) return <Login onLogin={handleLogin} />;
+  if (!session) return <Login onLogin={handleLogin} />;
 
-				return (
-								<div className="app-wrap">
-												<header className="header">
-																<div className="header-inner">
-																				<div className="header-izq">
-																								<button
-																												className="btn-hamburguesa"
-																												onClick={() => setSidebarAbierto(true)}
-																												aria-label="Abrir menú"
-																								>
-																												☰
-																								</button>
-																				</div>
+  return (
+    <div className="app-wrap">
+      <header className="header">
+        <div className="header-inner">
+          <div className="header-izq">
+            <button
+              className="btn-hamburguesa"
+              onClick={() => setSidebarAbierto(true)}
+              aria-label="Abrir menú"
+            >
+              ☰
+            </button>
+          </div>
           <nav className="header-nav">
             {[
               ["dashboard", "Mis Materias"],
@@ -95,10 +111,24 @@ export default function App() {
 
       {avisoNotif && (
         <div className="aviso-notif">
-          <span className="aviso-notif-text"> Aún no estás suscripto a las notificaciones, ¿querés activarlas?</span>
+          <span className="aviso-notif-text">
+            {" "}
+            Aún no estás suscripto a las notificaciones, ¿querés activarlas?
+          </span>
           <div className="aviso-notif-actions">
-            <button className="aviso-notif-btn" onClick={()=>setVista("notificaciones")}>Activar</button>
-            <button className="aviso-notif-x" onClick={cerrarAvisoNotif} aria-label="Cerrar">✕</button>
+            <button
+              className="aviso-notif-btn"
+              onClick={() => setVista("notificaciones")}
+            >
+              Activar
+            </button>
+            <button
+              className="aviso-notif-x"
+              onClick={cerrarAvisoNotif}
+              aria-label="Cerrar"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
@@ -109,15 +139,15 @@ export default function App() {
           <Agenda session={session} />
         ) : vista === "aulas" ? (
           <Aulas />
-        ) : vista === "examenes" ? (  
+        ) : vista === "examenes" ? (
           <Examenes session={session} />
-          ) : vista === "tareas" ? (
-           <Perfil session={session} />
-          ) : vista === "notificaciones" ? (
-            <Notificaciones session={session} onNavegar={setVista} />
-          ) : (
-           <Mapa session={session} />
-         )}
+        ) : vista === "perfil" ? (
+          <Perfil session={session} />
+        ) : vista === "notificaciones" ? (
+          <Notificaciones session={session} onNavegar={setVista} />
+        ) : (
+          <Mapa session={session} />
+        )}
         <Sidebar
           abierto={sidebarAbierto}
           onClose={() => setSidebarAbierto(false)}
