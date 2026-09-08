@@ -5,7 +5,7 @@ const OPCIONES_NAV = [
   ["aulas", "Aulas"],
   ["dashboard", "Mis Materias"],
   ["mapa", "Correlativas"],
-  ["agenda", "Calendario"],
+  ["agenda", "Agenda"],
   ["examenes", "Exámenes"],
   ["notificaciones", "Notificaciones"],
 ];
