@@ -15,6 +15,6 @@
 @import "./components/notificaciones.css";
 @import "./components/footer.css";
 @import "./components/spinner.css";
+@import "./components/calendario.css";
 
-@import "./calendario.css";
 @import "./responsive.css";
