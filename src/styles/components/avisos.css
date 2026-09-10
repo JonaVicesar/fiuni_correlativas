@@ -1,0 +1,131 @@
+.aviso-classroom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.aviso-classroom-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.aviso-classroom-ico {
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.aviso-classroom-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aviso-classroom-x {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 0 0.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.aviso-classroom-x:hover {
+  color: var(--text);
+}
+
+/* ─── banner de instalación de la app (PWA) ─────────────────────────────── */
+
+.instalar-app {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(94vw, 22rem);
+  z-index: 1000;
+}
+
+.instalar-app-caja {
+  position: relative;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem 0.7rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.instalar-app-x {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.45rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.15rem;
+}
+
+.instalar-app-x:hover {
+  color: var(--text);
+}
+
+.instalar-app-titulo {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  padding-right: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.instalar-app-detalle {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+.instalar-app-acciones {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.instalar-app-agregar {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.instalar-app-agregar:hover {
+  background: var(--accent-hover);
+}
+
+.instalar-app-cerrar {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.instalar-app-cerrar:hover {
+  color: var(--text);
+}
+

@@ -1,0 +1,35 @@
+.footer {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap;
+  gap: .5rem 1.5rem;
+  padding: 1rem 2rem;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,.03);
+  font-family: "Inter", sans-serif;
+  font-size: .85rem;
+  color: var(--text-dim);
+  transition: background-color .3s ease, color .3s ease;
+}
+.footer a { color: var(--accent); text-decoration: none; transition: color .2s ease; }
+.footer a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.footer-icon {
+  font-size: 1.35rem;
+  margin: 0 .35rem;
+  vertical-align: middle;
+  transition: color .2s ease, transform .2s ease;
+}
+.footer-icon:hover { transform: translateY(-2px); }
+.footer .icon-github   { color: var(--accent); }
+.footer .icon-whatsapp { color: var(--accent); }
+.footer .icon-envelope { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .footer {
+    flex-direction: column;
+    gap: .35rem;
+    padding: .9rem 1rem;
+    text-align: center;
+  }
+}

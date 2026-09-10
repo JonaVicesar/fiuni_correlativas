@@ -1,0 +1,21 @@
+.theme-toggle {
+  padding: .4rem;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  line-height: 1;
+}
+.theme-toggle:hover {
+  border-color: var(--accent);
+  background: rgba(229,62,62,.1);
+  transform: rotate(15deg);
+}
+[data-theme="dark"] .theme-toggle:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}

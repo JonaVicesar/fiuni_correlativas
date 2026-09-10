@@ -1,0 +1,14 @@
+.card-materia {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: .75rem;
+  transition: all .2s;
+  box-shadow: var(--shadow);
+}
+.card-materia:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}

@@ -1,0 +1,15 @@
+.badge-examen {
+  font-size: .6rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 20px;
+  background: rgba(49,130,206,.12);
+  color: var(--cursando);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge-examen-dim {
+  background: var(--bg2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
