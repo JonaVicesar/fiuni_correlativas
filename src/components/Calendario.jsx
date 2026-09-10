@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { limpiarNombre } from "../utils/limpiarNombre";
 import { apiFetch, parseJwt } from "../api";
-import "../styles/calendario.css";
 
 // El backend de la FIUNI agrega un "*" a las materias que son correlativas.
 // Esta función los elimina para que la interfaz se vea más limpia.
