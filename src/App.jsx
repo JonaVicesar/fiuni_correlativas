@@ -12,6 +12,7 @@ import ToggleTema from "./components/ToggleTema";
 import MenuPerfil from "./components/MenuPerfil";
 import Footer from "./components/Footer";
 import Notificaciones from "./components/Notificaciones";
+import TareasIntegral from "./components/TareasIntegral";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -86,6 +87,7 @@ export default function App() {
               ["dashboard", "Mis Materias"],
               ["mapa", "Correlativas"],
               ["agenda", "Agenda"],
+              ["tareas", "Tareas"],
             ].map(([v, label]) => (
               <button
                 key={v}
@@ -145,6 +147,8 @@ export default function App() {
           <Perfil session={session} />
         ) : vista === "notificaciones" ? (
           <Notificaciones session={session} onNavegar={setVista} />
+        ) : vista === "tareas" ? (
+          <TareasIntegral session={session} />
         ) : (
           <Mapa session={session} />
         )}
