@@ -17,5 +17,6 @@
 @import "./components/spinner.css";
 @import "./components/calendario.css";
 @import "./components/tareas-integral.css";
+@import "./components/materia-modal.css";
 
 @import "./responsive.css";
