@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../api";
 import { ESTADO_LABELS } from "../constants";
+import "../styles/components/materia-modal.css";
 
 //constantes de notas
 const NOTAS = [
@@ -69,43 +70,12 @@ function formatFecha(isoStr) {
 function Seccion({ titulo, children, defaultAbierta = false }) {
   const [abierta, setAbierta] = useState(defaultAbierta);
   return (
-    <div
-      style={{
-        borderTop: "1px solid var(--border)",
-        paddingTop: "1rem",
-        marginTop: "1rem",
-      }}
-    >
-      <button
-        onClick={() => setAbierta(!abierta)}
-        style={{
-          width: "100%",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: ".65rem",
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-            color: "var(--accent)",
-            fontFamily: "Inter, sans-serif",
-            fontWeight: "700",
-          }}
-        >
-          {titulo}
-        </span>
-        <span style={{ fontSize: ".7rem", color: "var(--text-dim)" }}>
-          {abierta ? "▲" : "▼"}
-        </span>
+    <div className="mm-seccion">
+      <button onClick={() => setAbierta(!abierta)} className="mm-seccion-btn">
+        <span className="mm-seccion-titulo">{titulo}</span>
+        <span className="mm-seccion-icon">{abierta ? "▲" : "▼"}</span>
       </button>
-      {abierta && <div style={{ marginTop: ".75rem" }}>{children}</div>}
+      {abierta && <div className="mm-seccion-body">{children}</div>}
     </div>
   );
 }
@@ -122,6 +92,7 @@ export default function MateriaModal({
   const [asistencia, setAsistencia] = useState(null);
   const [cargandoAsist, setCargandoAsist] = useState(false);
   const [faltasCargadas, setFaltasCargadas] = useState(false);
+  const [filtroAsist, setFiltroAsist] = useState("ausentes"); // todas | ausentes | presentes | sincargar
 
   if (!materia) return null;  
 
@@ -182,7 +153,6 @@ export default function MateriaModal({
       .finally(() => setCargandoAsist(false));
   }
 
-  // procesar las faltas
   const faltas =
     asistencia && !asistencia.error
       ? (() => {
@@ -212,238 +182,79 @@ export default function MateriaModal({
         })()
       : 0;
 
+  const sinCargar =
+    asistencia && !asistencia.error
+      ? (() => {
+          const mapa = Object.fromEntries(
+            (asistencia.studentAssists || []).map((sa) => [
+              sa.assistanceId,
+              sa.present,
+            ]),
+          );
+          return (asistencia.assists || []).filter((c) => mapa[c.id] == null)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+        })()
+      : [];
+
   const totalClases = asistencia?.assists?.length ?? 0;
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.85)",
-        zIndex: 400,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        style={{
-          background: "var(--bg3)",
-          border: "1px solid var(--border2)",
-          borderRadius: "16px",
-          width: "100%",
-          maxWidth: "520px",
-          maxHeight: "85vh",
-          overflowY: "auto",
-          padding: "1.75rem",
-          position: "relative",
-        }}
-      >
-        {/* boton cerrar */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "1.25rem",
-            right: "1.25rem",
-            background: "none",
-            border: "none",
-            color: "var(--text-dim)",
-            cursor: "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          ✕
-        </button>
+  useEffect(() => {
+    setAsistencia(null);
+    setFaltasCargadas(false);
+    setCargandoAsist(false);
+    setFiltroAsist("ausentes");
+  }, [materia?.id, materiaPeriodoId]);
 
-        {/* header con estado */}
-        <span
-          className={`panel-estado-badge badge-${estado}`}
-          style={{ marginBottom: ".75rem" }}
-        >
-          {ESTADO_LABELS[estado]}
-        </span>
-        <div
-          style={{
-            fontSize: "1.2rem",
-            fontWeight: "800",
-            marginBottom: ".25rem",
-            paddingRight: "2rem",
-          }}
-        >
-          {nombre}
-        </div>
-        <div
-          style={{
-            fontSize: ".7rem",
-            color: "var(--text-dim)",
-            fontFamily: "Inter, sans-serif",
-            marginBottom: "1.25rem",
-          }}
-        >
+  useEffect(() => {
+    if (tienePP && materiaPeriodoId && !faltasCargadas && !cargandoAsist && session?.token) {
+      cargarFaltas();
+    }
+  }, [tienePP, materiaPeriodoId, faltasCargadas, cargandoAsist, session?.token]);
+
+  return (
+    <div className="mm-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="mm-modal">
+        <button onClick={onClose} className="mm-close">✕</button>
+
+        <span className={`panel-estado-badge badge-${estado} mm-badge`}>{ESTADO_LABELS[estado]}</span>
+        <div className="mm-titulo">{nombre}</div>
+        <div className="mm-sub">
           {id} · Semestre {semestre}
           {creditos ? ` · ${creditos} créditos` : ""}
           {periodo ? ` · ${periodo}` : ""}
         </div>
 
-        {/* pp y asistencias*/}
         {tienePP ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
-              marginBottom: "1rem",
-            }}
-          >
-            {/* PP */}
-            <div
-              style={{
-                background: "var(--bg2)",
-                borderRadius: "10px",
-                padding: "12px 14px",
-                borderLeft: `3px solid ${colorPP(pp)}`,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: ".65rem",
-                  color: "var(--text-dim)",
-                  fontFamily: "Inter, sans-serif",
-                  marginBottom: "4px",
-                }}
-              >
-                PROMEDIO PP
-              </div>
-              <div
-                style={{
-                  fontSize: "1.6rem",
-                  fontWeight: "800",
-                  color: colorPP(pp),
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {pp}%
-              </div>
-              <div
-                style={{
-                  fontSize: ".65rem",
-                  color: colorPP(pp),
-                  fontFamily: "Inter, sans-serif",
-                  marginTop: "2px",
-                }}
-              >
-                {
-                  {
-                    final: "puede rendir final",
-                    recuperatorio: "solo recuperatorio",
-                    recursa: "recursa",
-                  }[estadoPp]
-                }
+          <div className="mm-pp-grid">
+            <div className="mm-pp-card" style={{borderLeftColor: colorPP(pp)}}>
+              <div className="mm-pp-label">PROMEDIO PP</div>
+              <div className="mm-pp-valor" style={{color: colorPP(pp)}}>{pp}%</div>
+              <div className="mm-pp-sub" style={{color: colorPP(pp)}}>
+                {{final: "puede rendir final", recuperatorio: "solo recuperatorio", recursa: "recursa"}[estadoPp]}
               </div>
             </div>
-
-            {/* Asistencia */}
-            <div
-              style={{
-                background: "var(--bg2)",
-                borderRadius: "10px",
-                padding: "12px 14px",
-                borderLeft: `3px solid ${colorAsistencia(asistPct)}`,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: ".65rem",
-                  color: "var(--text-dim)",
-                  fontFamily: "Inter, sans-serif",
-                  marginBottom: "4px",
-                }}
-              >
-                ASISTENCIA
-              </div>
-              <div
-                style={{
-                  fontSize: "1.6rem",
-                  fontWeight: "800",
-                  color: colorAsistencia(asistPct),
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {asistPct}%
-              </div>
-              <div
-                style={{
-                  fontSize: ".65rem",
-                  color: colorAsistencia(asistPct),
-                  fontFamily: "Inter, sans-serif",
-                  marginTop: "2px",
-                }}
-              >
-                {asistPct >= 75
-                  ? "regularidad ok"
-                  : asistPct >= 60
-                    ? "en riesgo"
-                    : "sin regularidad"}
+            <div className="mm-pp-card" style={{borderLeftColor: colorAsistencia(asistPct)}}>
+              <div className="mm-pp-label">ASISTENCIA</div>
+              <div className="mm-pp-valor" style={{color: colorAsistencia(asistPct)}}>{asistPct}%</div>
+              <div className="mm-pp-sub" style={{color: colorAsistencia(asistPct)}}>
+                {asistPct >= 75 ? "regularidad ok" : asistPct >= 60 ? "en riesgo" : "sin regularidad"}
               </div>
             </div>
           </div>
         ) : (
-          <div
-            style={{
-              fontSize: ".8rem",
-              color: "var(--text-dim)",
-              fontFamily: "Inter, sans-serif",
-              padding: "1rem",
-              background: "var(--bg2)",
-              borderRadius: "8px",
-              textAlign: "center",
-              marginBottom: "1rem",
-            }}
-          >
-            Sin historial de cursado
-          </div>
+          <div className="mm-sin-historial">Sin historial de cursado</div>
         )}
 
-        {/* seccion para calcular nota, solo se habilita si el pp es mayor a 50 */}
         {tienePP && estadoPp === "final" && (
           <Seccion titulo="Calculador de notas" defaultAbierta={true}>
-            <div
-              style={{
-                fontSize: ".65rem",
-                color: "var(--text-dim)",
-                fontFamily: "Inter, sans-serif",
-                marginBottom: "10px",
-              }}
-            >
-              Con PP {pp}% — mínimo necesario en el final:
-            </div>
+            <div className="mm-calc-sub">Con PP {pp}% — mínimo necesario en el final:</div>
             {NOTAS.map(({ nota, pcMin }) => {
               const pf = pfNecesario(pp, pcMin);
               const imposible = pf > 100;
               return (
-                <div
-                  key={nota}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "7px 0",
-                    borderBottom: "1px solid var(--border)",
-                    fontSize: ".8rem",
-                  }}
-                >
-                  <span style={{ fontWeight: "700" }}>Nota {nota}</span>
-                  <span
-                    style={{
-                      fontFamily: "Inter, sans-serif",
-                      color: imposible
-                        ? "var(--bloqueada-t)"
-                        : "var(--text-dim)",
-                    }}
-                  >
+                <div key={nota} className="mm-nota-fila">
+                  <span className="mm-nota-label">Nota {nota}</span>
+                  <span className={`mm-nota-valor ${imposible ? "imposible" : ""}`}>
                     {imposible ? "imposible con este PP" : `${pf}% mínimo`}
                   </span>
                 </div>
@@ -452,24 +263,14 @@ export default function MateriaModal({
           </Seccion>
         )}
 
-        {/*seccion de las correlativas de la materia*/}
         {(correlativas.length > 0 ||
           correlativasRegular.length > 0 ||
           desbloquea.length > 0) && (
           <Seccion titulo="Correlativas" defaultAbierta={true}>
             {correlativas.length > 0 && (
               <div style={{ marginBottom: "12px" }}>
-                <div
-                  style={{
-                    fontSize: ".65rem",
-                    color: "var(--accent)",
-                    fontFamily: "Inter, sans-serif",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Necesita aprobadas:
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div className="mm-corr-label">Necesita aprobadas:</div>
+                <div className="mm-corr-list">
                   {correlativas.map((cid) => {
                     const m = mapaIds[cid];
                     const ok = m?.estado === "aprobada";
@@ -480,20 +281,10 @@ export default function MateriaModal({
                         onClick={() => {
                           if (!clickable) return;
                           onClose();
-                          onNavigate(m); // te lleva al modal de la materia cickeada
+                          onNavigate(m);
                         }}
-                        style={{
-                          padding: "2px 10px",
-                          borderRadius: "20px",
-                          fontSize: ".7rem",
-                          fontFamily: "Inter, sans-serif",
-                          background: ok  
-                            ? "rgba(29,185,84,0.15)"
-                            : "rgba(255,77,77,0.1)",
-                          border: `1px solid ${ok ? "var(--aprobada)" : "var(--bloqueada-t)"}`,
-                          color: ok ? "var(--aprobada)" : "var(--bloqueada-t)",
-                          cursor: clickable ? "pointer" : "default",
-                        }}
+                        className={`mm-chip ${ok ? "mm-chip-ok" : "mm-chip-no"}`}
+                        style={{cursor: clickable ? "pointer" : "default"}}
                       >
                         {ok ? "✓" : "✕"} {m ? m.nombre : cid}
                       </span>
@@ -502,25 +293,13 @@ export default function MateriaModal({
                 </div>
               </div>
             )}
-
-            {/* Necesita regularidad */}
             {correlativasRegular.length > 0 && (
               <div style={{ marginBottom: "12px" }}>
-                <div
-                  style={{
-                    fontSize: ".65rem",
-                    color: "var(--accent)",
-                    fontFamily: "Inter, sans-serif",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Necesita regularidad (aprobada o cursando):
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div className="mm-corr-label">Necesita regularidad (aprobada o cursando):</div>
+                <div className="mm-corr-list">
                   {correlativasRegular.map((cid) => {
                     const m = mapaIds[cid];
-                    const ok =
-                      m?.estado === "aprobada" || m?.estado === "cursando";
+                    const ok = m?.estado === "aprobada" || m?.estado === "cursando";
                     const clickable = m && onNavigate;
                     return (
                       <span
@@ -530,18 +309,8 @@ export default function MateriaModal({
                           onClose();
                           onNavigate(m);
                         }}
-                        style={{
-                          padding: "2px 10px",
-                          borderRadius: "20px",
-                          fontSize: ".7rem",
-                          fontFamily: "Inter, sans-serif",
-                          background: ok
-                            ? "rgba(29,185,84,0.15)"
-                            : "rgba(255,77,77,0.1)",
-                          border: `1px solid ${ok ? "var(--aprobada)" : "var(--bloqueada-t)"}`,
-                          color: ok ? "var(--aprobada)" : "var(--bloqueada-t)",
-                          cursor: clickable ? "pointer" : "default",
-                        }}
+                        className={`mm-chip ${ok ? "mm-chip-ok" : "mm-chip-no"}`}
+                        style={{cursor: clickable ? "pointer" : "default"}}
                       >
                         {ok ? "✓" : "✕"} {m ? m.nombre : cid}
                       </span>
@@ -550,21 +319,10 @@ export default function MateriaModal({
                 </div>
               </div>
             )}
-
-            {/*habilita*/}
             {desbloquea.length > 0 && (
               <div style={{ marginBottom: "12px" }}>
-                <div
-                  style={{
-                    fontSize: ".65rem",
-                    color: "var(--accent)",
-                    fontFamily: "Inter, sans-serif",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Habilita (materias que podés cursar después):
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div className="mm-corr-label">Habilita (materias que podés cursar después):</div>
+                <div className="mm-corr-list">
                   {desbloquea.map((m) => (
                     <span
                       key={m.id}
@@ -573,15 +331,8 @@ export default function MateriaModal({
                         onClose();
                         onNavigate(m);
                       }}
-                      style={{
-                        padding: "2px 10px",
-                        borderRadius: "20px",
-                        fontSize: ".7rem",
-                        fontFamily: "Inter, sans-serif",
-                        background: "rgba(29,185,84,0.1)",
-                        border: "1px solid var(--aprobada)",
-                        cursor: onNavigate ? "pointer" : "default",
-                      }}
+                      className="mm-chip mm-chip-habilita"
+                      style={{cursor: onNavigate ? "pointer" : "default"}}
                     >
                       {m.nombre}
                     </span>
@@ -592,112 +343,85 @@ export default function MateriaModal({
           </Seccion>
         )}
 
-        {/* seccion para las faltas*/}
+        {/* Asistencias — antes "Mis faltas" */}
         {tienePP && materiaPeriodoId && (
-          <Seccion titulo="Mis faltas" defaultAbierta={false}>
+          <Seccion titulo="Asistencias" defaultAbierta={asistPct < 75}>
             {!faltasCargadas ? (
-              <button
-                onClick={cargarFaltas}
-                style={{
-                  background: "none",
-                  border: "1px solid var(--border2)",
-                  borderRadius: "6px",
-                  padding: "6px 14px",
-                  cursor: "pointer",
-                  fontSize: ".7rem",
-                  color: "var(--accent)",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                Cargar faltas
+              <button onClick={cargarFaltas} className="mm-btn-cargar">
+                Ver asistencias
               </button>
             ) : cargandoAsist ? (
-              <div
-                style={{
-                  fontSize: ".75rem",
-                  color: "var(--text-dim)",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                Cargando...
-              </div>
+              <div className="mm-cargando">Cargando asistencias…</div>
             ) : asistencia?.error ? (
-              <div
-                style={{
-                  fontSize: ".75rem",
-                  color: "var(--bloqueada-t)",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                No se pudo cargar la asistencia
+              <div className="mm-error">
+                No se pudo cargar la asistencia{" "}
+                <button
+                  onClick={() => {
+                    setFaltasCargadas(false);
+                    setAsistencia(null);
+                  }}
+                  className="mm-link"
+                >
+                  Reintentar
+                </button>
               </div>
             ) : (
               <>
-                <div
-                  style={{
-                    fontSize: ".7rem",
-                    color: "var(--text-dim)",
-                    fontFamily: "Inter, sans-serif",
-                    marginBottom: "10px",
-                  }}
-                >
-                  {presentes} presentes · {faltas.length} ausentes ·{" "}
-                  {totalClases} clases totales
-                </div>
-                {faltas.length === 0 ? (
-                  <div
-                    style={{
-                      fontSize: ".75rem",
-                      color: "var(--aprobada)",
-                      fontFamily: "Inter, sans-serif",
-                    }}
-                  >
-                    Sin faltas registradas
-                  </div>
-                ) : (
-                  faltas.map((c) => (
-                    <div
-                      key={c.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "6px 0",
-                        borderBottom: "1px solid var(--border)",
-                        fontSize: ".75rem",
-                      }}
+
+                {/* tabs */}
+                <div className="mm-tabs">
+                  {[
+                    ["todas", `Todas (${totalClases})`],
+                    ["ausentes", `Ausentes (${faltas.length})`],
+                    ["presentes", `Presentes (${presentes})`],
+                    ...(sinCargar.length ? [["sincargar", `Sin cargar (${sinCargar.length})`]] : []),
+                  ].map(([k, label]) => (
+                    <button
+                      key={k}
+                      onClick={() => setFiltroAsist(k)}
+                      className={`mm-tab ${filtroAsist === k ? "activo" : ""}`}
                     >
-                      <span
-                        style={{
-                          color: "var(--bloqueada-t)",
-                          fontFamily: "Inter, sans-serif",
-                          fontSize: ".65rem",
-                        }}
-                      >
-                        ✕
-                      </span>
-                      <span
-                        style={{
-                          color: "var(--text-dim)",
-                          fontFamily: "Inter, sans-serif",
-                        }}
-                      >
-                        {formatFecha(c.date)}
-                      </span>
-                      {c.reference && (
-                        <span
-                          style={{
-                            color: "var(--text-dim)",
-                            fontSize: ".65rem",
-                            marginLeft: "auto",
-                          }}
-                        >
-                          {c.reference}
-                        </span>
-                      )}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* lista filtrada */}
+                {(() => {
+                  const mapa = Object.fromEntries((asistencia.studentAssists || []).map(sa => [sa.assistanceId, sa.present]));
+                  const todas = (asistencia.assists || []).slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+                  const filtradas = todas.filter(c => {
+                    const present = mapa[c.id];
+                    if (filtroAsist === "ausentes") return present === false;
+                    if (filtroAsist === "presentes") return present === true;
+                    if (filtroAsist === "sincargar") return present == null;
+                    return true;
+                  });
+                  if (filtradas.length === 0) {
+                    return <div className="mm-vacio">{
+                      filtroAsist === "ausentes" ? "Sin ausencias, oiko" :
+                      filtroAsist === "presentes" ? "Sin presencias registradas, hendy hina" :
+                      filtroAsist === "sincargar" ? "Sin clases sin cargar" : "Sin clases registradas"
+                    }</div>;
+                  }
+                  return (
+                    <div className="mm-lista">
+                      {filtradas.map(c => {
+                        const present = mapa[c.id];
+                        const isSinCargar = present == null;
+                        const isPresente = present === true;
+                        return (
+                          <div key={c.id} className={`mm-fila ${isSinCargar ? "mm-fila-sincargar" : isPresente ? "mm-fila-presente" : "mm-fila-ausente"}`}>
+                            <span className="mm-fila-icon">{isSinCargar ? "–" : isPresente ? "✓" : "✕"}</span>
+                            <span className="mm-fila-fecha">{formatFecha(c.date)}</span>
+                            {c.reference && <span className="mm-fila-ref">{c.reference}</span>}
+                            <span className="mm-fila-estado">{isSinCargar ? "Sin cargar" : isPresente ? "Presente" : "Ausente"}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))
-                )}
+                  );
+                })()}
               </>
             )}
           </Seccion>
