@@ -59,6 +59,85 @@ export default function App() {
     setAvisoNotif(false);
   };
 
+	// para notificaciones en el panel cuando se agregar nuevas tareas
+  const [avisoTarea, setAvisoTarea] = useState(null);
+
+  useEffect(() => {
+    if (!session?.token) { setAvisoTarea(null); return; }
+    if (vista === "tareas") {
+      (async () => {
+        try {
+          const tablero = await apiFetch("/materias", { token: session.token, cache: true });
+          const ids = (Array.isArray(tablero) ? tablero : []).map(m=>m.id).filter(Boolean);
+          if (!ids.length) return;
+          const porMat = await apiFetch("/tareas", { method:"POST", token: session.token, body:{ materiasPeriodoIds: ids }, cache: false });
+          const idsActual = [];
+          for (const k of Object.keys(porMat||{})) {
+            for (const t of (porMat[k]||[])) if (t?.id != null) idsActual.push(String(t.id));
+          }
+          try { localStorage.setItem("tareas_vistos_ids", JSON.stringify(idsActual.sort())); } catch {}
+          try { localStorage.removeItem("tareas_aviso_cerrado_ids"); } catch {}
+          setAvisoTarea(null);
+        } catch {}
+      })();
+      return;
+    }
+    let cancel = false;
+    (async () => {
+      try {
+        const tablero = await apiFetch("/materias", { token: session.token, cache: true });
+        const lista = Array.isArray(tablero) ? tablero : [];
+        const ids = lista.map(m=>m.id).filter(Boolean);
+        if (!ids.length) return;
+        const porMat = await apiFetch("/tareas", { method:"POST", token: session.token, body:{ materiasPeriodoIds: ids }, cache: false });
+        const planas = [];
+        for (const m of lista) {
+          const arr = Array.isArray(porMat[String(m.id)]) ? porMat[String(m.id)] : [];
+          for (const t of arr) planas.push({ t, m });
+        }
+        const idsActual = planas.map(({t})=> String(t.id)).filter(Boolean).sort();
+        if (!idsActual.length) return;
+        let previos = [];
+        try { previos = JSON.parse(localStorage.getItem("tareas_vistos_ids") || "[]"); } catch { previos = []; }
+        if (previos.length === 0) {
+          try { localStorage.setItem("tareas_vistos_ids", JSON.stringify(idsActual)); } catch {}
+          return;
+        }
+        let cerrados = [];
+        try { cerrados = JSON.parse(localStorage.getItem("tareas_aviso_cerrado_ids") || "[]"); } catch { cerrados = []; }
+        const nuevos = idsActual.filter(id => !previos.includes(id) && !cerrados.includes(id));
+        if (nuevos.length===0 || cancel) return;
+        const primera = planas.find(({t})=> String(t.id)===nuevos[0]);
+        if (!primera) return;
+        const tit = primera.t.tarea || primera.t.nombre || primera.t.titulo || "Nueva tarea";
+        setAvisoTarea({ count: nuevos.length, materia: primera.m.materia || "", titulo: String(tit).slice(0,48), idsNuevos: nuevos });
+      } catch {}
+    })();
+    return () => { cancel = true; };
+  }, [session?.token, vista]);
+
+  const cerrarAvisoTarea = () => {
+    if (avisoTarea?.idsNuevos?.length) {
+      try {
+        const prev = JSON.parse(localStorage.getItem("tareas_aviso_cerrado_ids") || "[]");
+        const merged = Array.from(new Set([...(Array.isArray(prev)?prev:[]), ...avisoTarea.idsNuevos]));
+        localStorage.setItem("tareas_aviso_cerrado_ids", JSON.stringify(merged));
+      } catch {}
+    }
+    setAvisoTarea(null);
+  };
+  const verAvisoTarea = () => {
+    if (avisoTarea?.idsNuevos?.length) {
+      try {
+        const prev = JSON.parse(localStorage.getItem("tareas_vistos_ids") || "[]");
+        const merged = Array.from(new Set([...(Array.isArray(prev)?prev:[]), ...avisoTarea.idsNuevos]));
+        localStorage.setItem("tareas_vistos_ids", JSON.stringify(merged.sort()));
+      } catch {}
+    }
+    setAvisoTarea(null);
+    setVista("tareas");
+  };
+
   function handleLogin(data) {
     setSession(data);
   }
@@ -129,6 +208,23 @@ export default function App() {
               onClick={cerrarAvisoNotif}
               aria-label="Cerrar"
             >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      {avisoTarea && (
+        <div className="aviso-notif" style={{borderLeftColor:"var(--cursando)"}}>
+          <span className="aviso-notif-text">
+            {avisoTarea.count === 1
+              ? `Nueva tarea en ${avisoTarea.materia} — ${avisoTarea.titulo}`
+              : `${avisoTarea.count} nuevas tareas — ${avisoTarea.materia} y más`}
+          </span>
+          <div className="aviso-notif-actions">
+            <button className="aviso-notif-btn" onClick={verAvisoTarea} style={{background:"var(--cursando)"}}>
+              Ver
+            </button>
+            <button className="aviso-notif-x" onClick={cerrarAvisoTarea} aria-label="Cerrar">
               ✕
             </button>
           </div>
