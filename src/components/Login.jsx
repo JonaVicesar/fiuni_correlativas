@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { apiFetch, storage } from "../api";
+import ojo from "../assets/ojo.svg";
+import ojoOff from "../assets/ojo-off.svg";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -74,7 +76,7 @@ return (
                 tabIndex={-1}
                 aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
-                <img src={showPass ? "/src/assets/ojo-off.svg" : "/src/assets/ojo.svg"} alt="" width="20" height="20" />
+                <img src={showPass ? ojoOff : ojo} alt="" width="20" height="20" />
               </button>
             </div>
           </div>
