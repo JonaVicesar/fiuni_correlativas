@@ -87,12 +87,13 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.field-pass { position: relative; }
 .field-pass input { padding-right: 3rem; }
+
+.field-pass-wrap { position: relative; display: flex; align-items: center; }
 
 .btn-ver-pass {
   position: absolute;
-  right: .4rem; top: 50%;
+  right: .5rem; top: 50%;
   transform: translateY(-50%);
   background: none; border: none;
   padding: .35rem;
@@ -100,6 +101,7 @@
   color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
   transition: color .15s;
+  line-height: 0;
 }
 .btn-ver-pass:hover { color: var(--text); }
 
