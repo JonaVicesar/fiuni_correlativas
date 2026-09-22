@@ -6,6 +6,7 @@ export default function Login({ onLogin }) {
   const [pass, setPass] = useState(""); //estado para la contrasena
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -56,15 +57,26 @@ return (
             />
           </div>
 
-          <div className="field">
+          <div className="field field-pass">
             <label>Contraseña</label>
-            <input
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              placeholder="Ingresa tu contraseña"
-              required
-            />
+            <div className="field-pass-wrap">
+              <input
+                type={showPass ? "text" : "password"}
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                placeholder="Ingresa tu contraseña"
+                required
+              />
+              <button
+                type="button"
+                className="btn-ver-pass"
+                onClick={() => setShowPass((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                <img src={showPass ? "/src/assets/ojo-off.svg" : "/src/assets/ojo.svg"} alt="" width="20" height="20" />
+              </button>
+            </div>
           </div>
 
           <button className="btn-primary" type="submit" disabled={loading}>
