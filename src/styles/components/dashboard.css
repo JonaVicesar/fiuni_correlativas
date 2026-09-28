@@ -1,3 +1,39 @@
+.dash-wrap { margin-bottom: 2rem; }
+.dash-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  flex-wrap: wrap; gap: 1rem;
+}
+.dash-carrera {
+  font-size: .75rem; text-transform: uppercase; letter-spacing: 3px;
+  color: var(--text-dim); font-family: Inter, sans-serif; margin-bottom: .5rem;
+}
+.dash-titulo { font-size: 1.0rem; font-weight: 500; margin: 0; }
+.dash-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+.dash-tab {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 16px; cursor: pointer; font-family: Inter, sans-serif;
+  font-size: .75rem; font-weight: 600; color: var(--text-dim); transition: all .2s;
+}
+.dash-tab.activo { background: var(--accent); border-color: var(--accent); color: #fff; }
+[data-theme="dark"] .dash-tab.activo { color: #000; }
+.dash-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;
+}
+.dash-card-clickable { cursor: pointer; }
+.dash-card-nombre { font-weight: 700; font-size: .95rem; }
+.dash-card-codigo { font-family: Inter, sans-serif; font-size: .7rem; color: var(--text-dim); }
+.dash-card-meta-row {
+  display: flex; justify-content: space-between; font-size: .75rem; margin-bottom: .3rem;
+}
+.dash-card-meta-label { color: var(--text-dim); }
+.dash-card-meta-valor { font-weight: 700; font-family: Inter, sans-serif; }
+.dash-bar { height: 3px; background: var(--border); border-radius: 2px; }
+.dash-bar-fill { height: 100%; border-radius: 2px; }
+.dash-card-foot {
+  font-size: .65rem; color: var(--text-dim); font-family: Inter, sans-serif;
+  border-top: 1px solid var(--border); padding-top: .5rem;
+}
+.dash-error { padding: 2rem; }
 .card-materia {
   background: var(--bg3);
   border: 1px solid var(--border);
