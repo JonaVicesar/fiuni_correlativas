@@ -343,7 +343,7 @@ export default function MateriaModal({
           </Seccion>
         )}
 
-        {/* Asistencias — antes "Mis faltas" */}
+        {/* Asistencias antes "Mis faltas" */}
         {tienePP && materiaPeriodoId && (
           <Seccion titulo="Asistencias" defaultAbierta={asistPct < 75}>
             {!faltasCargadas ? (

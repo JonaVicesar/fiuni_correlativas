@@ -23,7 +23,7 @@ export default function Dashboard({ session }) {
   const [modalMateria, setModalMateria] = useState(null);
   const [historialMaterias, setHistorialMaterias] = useState(null);
   const [mapaMaterias, setMapaMaterias] = useState(null);
-  const [mostrarLibreta, setMostrarLibreta] = useState(false); // Estado para toggle
+  const [seccion, setSeccion] = useState("materias"); // materias | libreta
 
   // carga las materias actuales
   useEffect(() => {
@@ -53,216 +53,68 @@ export default function Dashboard({ session }) {
   }, [session.token, session.carreraId]);
 
   if (loading) return <Spinner texto="Cargando tus materias..." />;
-  if (error)
-    return (
-      <div className="error-msg" style={{ padding: "2rem" }}>
-        ⚠ {error}
-      </div>
-    );
+  if (error) return <div className="error-msg dash-error">⚠ {error}</div>;
 
   return (
     <div className="main">
-      <div style={{ marginBottom: "2rem" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            flexWrap: "wrap",
-            gap: "1rem",
-          }}
-        >
+      <div className="dash-wrap">
+        <div className="dash-header">
           <div>
-            <div
-              style={{
-                fontSize: ".75rem",
-                textTransform: "uppercase",
-                letterSpacing: "3px",
-                color: "var(--text-dim)",
-                fontFamily: "Inter, sans-serif",
-                marginBottom: ".5rem",
-              }}
-            >
+            <div className="dash-carrera">
               {session.carrera || "Informática"} · {new Date().getFullYear()}
             </div>
-            <h1 style={{ fontSize: "1.0rem", fontWeight: "500", margin: 0 }}>
-              {mostrarLibreta ? "Libreta de notas" : "Mis materias"}
+            <h1 className="dash-titulo">
+              {seccion === "libreta" ? "Libreta" : "Mis materias"}
             </h1>
           </div>
-
-          {/* boton para cambiar entre secciones*/}
-          <button
-            onClick={() => setMostrarLibreta(!mostrarLibreta)}
-            style={{
-              background: mostrarLibreta ? "var(--accent)" : "var(--bg2)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              cursor: "pointer",
-              fontFamily: "Inter, sans-serif",
-              fontSize: ".75rem",
-              fontWeight: "600",
-              color: mostrarLibreta ? "white" : "var(--text-dim)",
-              transition: "all 0.2s",
-            }}
-          >
-            {mostrarLibreta ? "Mis materias" : "Libreta"}
-          </button>
+          <div className="dash-tabs">
+            {[
+              ["materias", "Mis materias"],
+              ["libreta", "Libreta"],
+            ].map(([v, label]) => (
+              <button key={v} onClick={() => setSeccion(v)} className={`dash-tab ${seccion === v ? "activo" : ""}`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-
-        {!mostrarLibreta && (
-          <span
-            style={{
-              fontSize: ".7rem",
-              color: "var(--text-dim)",
-              fontFamily: "Inter, sans-serif",
-              display: "block",
-              marginTop: ".5rem",
-            }}
-          >
-            Click en cualquier materia para ver su detalle
-          </span>
-        )}
       </div>
 
-      {!mostrarLibreta ? (
-        // vista de materias
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "1rem",
-          }}
-        >
+      {seccion === "materias" ? (
+        <div className="dash-grid">
           {materias.map((m) => {
-            const registro = m;
-            const pp = registro?.porcentajePP ?? 0;
-            const pAsistencia = registro?.porcentajeAsistencia ?? 0;
-
+            const pp = m?.porcentajePP ?? 0;
+            const pAsistencia = m?.porcentajeAsistencia ?? 0;
             return (
               <div
                 key={m.id}
-                className="card-materia"
-                onClick={() => {
-                  setModalMateria({
-                    id: m.codigoMateria,
-                    nombre: m.materia,
-                    semestre: m.semestre,
-                    estado: "cursando",
-                  });
-                }}
-                style={{ cursor: "pointer" }}
+                className="card-materia dash-card-clickable"
+                onClick={() => setModalMateria({ id: m.codigoMateria, nombre: m.materia, semestre: m.semestre, estado: "cursando" })}
               >
                 <div>
-                  <div style={{ fontWeight: "700", fontSize: ".95rem" }}>
-                    {m.materia}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "Inter, sans-serif",
-                      fontSize: ".7rem",
-                      color: "var(--text-dim)",
-                    }}
-                  >
-                    Cód. {m.codigoMateria} · {m.semestre}° Semestre
-                  </div>
+                  <div className="dash-card-nombre">{m.materia}</div>
+                  <div className="dash-card-codigo">Cód. {m.codigoMateria} · {m.semestre}° Semestre</div>
                 </div>
-
-                {/*Asistencia */}
                 <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: ".75rem",
-                      marginBottom: ".3rem",
-                    }}
-                  >
-                    <span style={{ color: "var(--text-dim)" }}>Asistencia</span>
-                    <span
-                      style={{
-                        color: colorAsistencia(pAsistencia),
-                        fontWeight: "700",
-                        fontFamily: "Inter, sans-serif",
-                      }}
-                    >
-                      {pAsistencia}%
-                    </span>
+                  <div className="dash-card-meta-row">
+                    <span className="dash-card-meta-label">Asistencia</span>
+                    <span className="dash-card-meta-valor" style={{color: colorAsistencia(pAsistencia)}}>{pAsistencia}%</span>
                   </div>
-                  <div
-                    style={{
-                      height: "3px",
-                      background: "var(--border)",
-                      borderRadius: "2px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${pAsistencia}%`,
-                        background: colorAsistencia(pAsistencia),
-                        borderRadius: "2px",
-                      }}
-                    />
-                  </div>
+                  <div className="dash-bar"><div className="dash-bar-fill" style={{width: `${pAsistencia}%`, background: colorAsistencia(pAsistencia)}} /></div>
                 </div>
-
-                {/*Promedio PP */}
                 <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: ".75rem",
-                      marginBottom: ".3rem",
-                    }}
-                  >
-                    <span style={{ color: "var(--text-dim)" }}>
-                      Promedio PP
-                    </span>
-                    <span
-                      style={{
-                        color: colorPP(pp),
-                        fontWeight: "700",
-                        fontFamily: "Inter, sans-serif",
-                      }}
-                    >
-                      {pp}%
-                    </span>
+                  <div className="dash-card-meta-row">
+                    <span className="dash-card-meta-label">Promedio PP</span>
+                    <span className="dash-card-meta-valor" style={{color: colorPP(pp)}}>{pp}%</span>
                   </div>
-                  <div
-                    style={{
-                      height: "3px",
-                      background: "var(--border)",
-                      borderRadius: "2px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${pp}%`,
-                        background: colorPP(pp),
-                        borderRadius: "2px",
-                      }}
-                    />
-                  </div>
+                  <div className="dash-bar"><div className="dash-bar-fill" style={{width: `${pp}%`, background: colorPP(pp)}} /></div>
                 </div>
-
-                <div
-                  style={{
-                    fontSize: ".65rem",
-                    color: "var(--text-dim)",
-                    fontFamily: "Inter, sans-serif",
-                    borderTop: "1px solid var(--border)",
-                    paddingTop: ".5rem",
-                  }}
-                ></div>
+                <div className="dash-card-foot"></div>
               </div>
             );
           })}
         </div>
       ) : (
-        // Vista de libreta
         <Libreta session={session} />
       )}
 
