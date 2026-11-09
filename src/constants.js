@@ -1,5 +1,7 @@
 export const API = "https://fiuni-server.onrender.com"; //enlace del servidor
 
+export const MAINTENANCE_MODE = true;
+
 export const ESTADO_LABELS = {
   aprobada: "✓ Aprobada",
   cursando: "◉ Cursando",
