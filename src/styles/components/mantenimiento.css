@@ -128,6 +128,69 @@
   border-top: 3px dotted #adc178;
 }
 
+.mantenimiento-porque-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem;
+  background: #fff;
+  border: 3px solid var(--mt-border);
+  box-shadow: 3px 3px 0 0 var(--mt-border);
+  color: var(--mt-text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.mantenimiento-porque-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.mantenimiento-porque-flecha {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.mantenimiento-porque-btn.abierto .mantenimiento-porque-flecha {
+  transform: rotate(180deg);
+}
+
+.mantenimiento-slide {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+
+.mantenimiento-slide.abierto {
+  grid-template-rows: 1fr;
+}
+
+.mantenimiento-slide-inner {
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.mantenimiento-slide.abierto .mantenimiento-slide-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mantenimiento-slide-texto {
+  margin-top: 1rem;
+  padding: 1rem;
+  text-align: left;
+  background: #f7fbf7;
+  border: 2px dashed var(--mt-border);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
 .mantenimiento-btn {
   display: inline-block;
   padding: 0.5rem 1.5rem;
