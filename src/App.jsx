@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { storage, apiFetch } from "./api";
+import { MAINTENANCE_MODE } from "./constants";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Mapa from "./components/Mapa";
@@ -13,6 +14,7 @@ import MenuPerfil from "./components/MenuPerfil";
 import Footer from "./components/Footer";
 import Notificaciones from "./components/Notificaciones";
 import TareasIntegral from "./components/TareasIntegral";
+import Mantenimiento from "./components/Mantenimiento";
 
 export default function App() {
   const [session, setSession] = useState(() => storage.get("session"));
@@ -28,7 +30,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!session?.token || vista === "notificaciones") {
+    if (MAINTENANCE_MODE || !session?.token || vista === "notificaciones") {
       setAvisoNotif(false);
       return;
     }
@@ -63,7 +65,7 @@ export default function App() {
   const [avisoTarea, setAvisoTarea] = useState(null);
 
   useEffect(() => {
-    if (!session?.token) { setAvisoTarea(null); return; }
+    if (MAINTENANCE_MODE || !session?.token) { setAvisoTarea(null); return; }
     if (vista === "tareas") {
       (async () => {
         try {
@@ -145,6 +147,8 @@ export default function App() {
     storage.del("session");
     setSession(null);
   }
+
+  if (MAINTENANCE_MODE) return <Mantenimiento />;
 
   if (!session) return <Login onLogin={handleLogin} />;
 
