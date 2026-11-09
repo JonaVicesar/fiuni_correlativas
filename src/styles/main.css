@@ -18,5 +18,6 @@
 @import "./components/calendario.css";
 @import "./components/tareas-integral.css";
 @import "./components/materia-modal.css";
+@import "./components/mantenimiento.css";
 
 @import "./responsive.css";
