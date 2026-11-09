@@ -1,4 +1,8 @@
+import { useState } from "react";
+
 export default function Mantenimiento() {
+  const [porqueAbierto, setPorqueAbierto] = useState(false);
+
   return (
     <div className="mantenimiento-wrap">
       <div className="mantenimiento-noise" aria-hidden="true" />
@@ -24,6 +28,36 @@ export default function Mantenimiento() {
         </div>
 
         <div className="mantenimiento-footer">
+          <button
+            type="button"
+            className={`mantenimiento-porque-btn${porqueAbierto ? " abierto" : ""}`}
+            onClick={() => setPorqueAbierto((v) => !v)}
+            aria-expanded={porqueAbierto}
+            aria-controls="mantenimiento-porque"
+          >
+            ¿Por qué?
+            <span className="mantenimiento-porque-flecha" aria-hidden="true">
+              ▾
+            </span>
+          </button>
+
+          <div
+            id="mantenimiento-porque"
+            className={`mantenimiento-slide${porqueAbierto ? " abierto" : ""}`}
+          >
+            <div className="mantenimiento-slide-inner">
+              <p className="mantenimiento-slide-texto">
+								No se lgm kp.
+                El servidor oficial de Integral no está respondiendo. 
+								Probablemente estan trabajando en actualizaciones o mantenimiento.
+
+								Integral 2.0 necesita conectarse a ese servidor. Mientras no vuelva, la app
+                queda en mantenimiento para no mostrarte datos incompletos ni
+                errores. No es un problema de tu cuenta ni de tu contraseña. No anda luego Integral, eso.
+								
+              </p>
+            </div>
+          </div>
         </div>
       </main>
     </div>
